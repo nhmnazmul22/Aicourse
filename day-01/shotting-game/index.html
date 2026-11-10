@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111a1d" />
+    <title>Deadlock — Arena 01</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="cabinet">
+      <header class="topbar">
+        <a class="wordmark" href="#" aria-label="Deadlock home">
+          <span class="wordmark-mark" aria-hidden="true"></span>
+          DEADLOCK
+        </a>
+        <div class="topbar-center"><span class="live-dot"></span> TRAINING SIMULATION</div>
+        <div class="topbar-right">ARENA <span>01</span><i></i> BUILD 2.4.08</div>
+      </header>
+
+      <section class="game-layout" aria-label="Arena game">
+        <div class="game-column">
+          <div class="game-frame">
+            <div id="game-root" aria-label="First person shooter arena"></div>
+            <div class="frame-sheen" aria-hidden="true"></div>
+
+            <div class="game-hud" aria-live="polite">
+              <div class="hud-top">
+                <div class="hud-player">
+                  <span class="hud-label">VITALS</span>
+                  <span class="health-track"><span id="player-health-bar"></span></span>
+                  <span id="player-health" class="health-number">100</span>
+                </div>
+                <div class="round-readout"><span>ROUND</span><b>01</b></div>
+                <div class="hud-enemy">
+                  <span class="hud-label">TARGET</span>
+                  <span class="health-track enemy-track"><span id="enemy-health-bar"></span></span>
+                  <span id="enemy-health" class="health-number">100</span>
+                </div>
+              </div>
+
+              <div class="reticle" aria-hidden="true"><i></i><b></b></div>
+              <div id="hit-marker" class="hit-marker" aria-hidden="true">×</div>
+
+              <div class="hud-bottom">
+                <div class="ammo-readout"><span>ENERGY CELLS</span><b>∞</b></div>
+                <div class="distance-readout"><span class="live-dot"></span><span id="target-distance">TARGET ACQUIRING</span></div>
+                <div class="score-readout"><span>HITS</span><b id="hit-count">00</b></div>
+              </div>
+            </div>
+
+            <div id="game-overlay" class="game-overlay">
+              <div class="overlay-content">
+                <div class="overlay-kicker"><span class="live-dot"></span><span id="overlay-kicker">SIMULATION READY</span></div>
+                <h1 id="overlay-title">ENTER THE<br /><em>ARENA.</em></h1>
+                <p id="overlay-copy">One opponent. No cover to hide behind.<br />Keep moving and make every shot count.</p>
+                <button id="start-button" class="start-button" type="button">
+                  <span id="start-button-label">Start simulation</span><span aria-hidden="true">↗</span>
+                </button>
+                <span class="overlay-footnote">BEST PLAYED FULL SCREEN</span>
+              </div>
+            </div>
+
+            <div class="frame-corner corner-tl" aria-hidden="true"></div>
+            <div class="frame-corner corner-br" aria-hidden="true"></div>
+          </div>
+
+          <div class="game-caption">
+            <span><b class="caption-live"></b> SYSTEM ONLINE</span>
+            <span>SECTOR 01 <i></i> IRON YARD</span>
+            <span>THREAT LEVEL <b class="threat">ELEVATED</b></span>
+          </div>
+        </div>
+
+        <aside class="side-panel">
+          <div class="panel-heading">
+            <span class="panel-index">FIELD GUIDE / 01</span>
+            <h2>Stay alive.<br />Stay <span>moving.</span></h2>
+            <p>A live-fire drill against one autonomous combat unit.</p>
+          </div>
+
+          <div class="opponent-card">
+            <div class="opponent-topline"><span>HOSTILE UNIT</span><span class="unit-status"><i></i> ACTIVE</span></div>
+            <div class="opponent-visual" aria-hidden="true">
+              <div class="scan-line"></div>
+              <div class="unit-silhouette"><i></i><b></b><em></em><small></small></div>
+              <span class="target-mark mark-a"></span>
+              <span class="target-mark mark-b"></span>
+              <span class="target-mark mark-c"></span>
+              <span class="unit-id">EN-01</span>
+            </div>
+            <div class="opponent-meta"><b>WARDEN</b><span>MK. IV / COMBAT AI</span></div>
+            <div class="opponent-meter"><span id="opponent-health-bar"></span></div>
+          </div>
+
+          <div class="controls">
+            <h3>Controls</h3>
+            <div class="control-row">
+              <div class="arrow-keys" aria-label="Arrow keys">
+                <kbd>↑</kbd><span><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span>
+              </div>
+              <div class="control-description"><b>Move &amp; turn</b><span>Navigate the arena</span></div>
+            </div>
+            <div class="control-row">
+              <kbd class="space-key">SPACE</kbd>
+              <div class="control-description"><b>Fire weapon</b><span>Hold to keep firing</span></div>
+            </div>
+          </div>
+
+          <div class="field-note">
+            <span class="note-symbol" aria-hidden="true">!</span>
+            <p>Warden tracks your position. Circling makes you harder to hit.</p>
+          </div>
+          <div class="panel-footer"><span>SIMULATION RULES APPLY</span><span>© DEADLOCK SYSTEMS</span></div>
+        </aside>
+      </section>
+
+      <footer class="page-footer">
+        <span>NO RECRUITS LEFT BEHIND.</span>
+        <span>ARROW KEYS TO MOVE <i></i> SPACE TO FIRE</span>
+        <span class="footer-mark">DL<span> / </span>01</span>
+      </footer>
+    </main>
+    <script type="module" src="./game.js"></script>
+  </body>
+</html>
