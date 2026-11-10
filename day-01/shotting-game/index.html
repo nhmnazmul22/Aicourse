@@ -20,8 +20,8 @@
           <span class="wordmark-mark" aria-hidden="true"></span>
           DEADLOCK
         </a>
-        <div class="topbar-center"><span class="live-dot"></span> TRAINING SIMULATION</div>
-        <div class="topbar-right">ARENA <span>01</span><i></i> BUILD 2.4.08</div>
+        <div class="topbar-center"><span class="live-dot"></span> FRONTIER COMBAT</div>
+        <div class="topbar-right">FOREST ZONE <span>01</span><i></i> FPS</div>
       </header>
 
       <section class="game-layout" aria-label="Arena game">
@@ -33,13 +33,13 @@
             <div class="game-hud" aria-live="polite">
               <div class="hud-top">
                 <div class="hud-player">
-                  <span class="hud-label">VITALS</span>
+                  <span class="hud-label">YOU</span>
                   <span class="health-track"><span id="player-health-bar"></span></span>
                   <span id="player-health" class="health-number">100</span>
                 </div>
-                <div class="round-readout"><span>ROUND</span><b>01</b></div>
+                <div class="round-readout"><span>LEVEL</span><b id="level-readout">01</b></div>
                 <div class="hud-enemy">
-                  <span class="hud-label">TARGET</span>
+                  <span class="hud-label" id="enemy-label">ENEMIES</span>
                   <span class="health-track enemy-track"><span id="enemy-health-bar"></span></span>
                   <span id="enemy-health" class="health-number">100</span>
                 </div>
@@ -47,28 +47,45 @@
 
               <div class="reticle" aria-hidden="true"><i></i><b></b></div>
               <div id="hit-marker" class="hit-marker" aria-hidden="true">×</div>
+              <div id="weapon" aria-hidden="true"><span class="weapon-hand"></span><span class="weapon-grip"></span><span class="weapon-body"></span><span class="weapon-slide"></span><span class="weapon-muzzle"></span></div>
 
               <div class="hud-bottom">
-                <div class="ammo-readout"><span>ENERGY CELLS</span><b>∞</b></div>
-                <div class="distance-readout"><span class="live-dot"></span><span id="target-distance">TARGET ACQUIRING</span></div>
-                <div class="score-readout"><span>HITS</span><b id="hit-count">00</b></div>
+                <div class="ammo-readout"><span>WEAPON</span><b id="weapon-level">MK. I</b></div>
+                <canvas id="minimap" width="128" height="128" aria-label="Arena minimap"></canvas>
+                <div class="score-readout"><span>ELIMINATIONS</span><b id="hit-count">00</b></div>
               </div>
             </div>
 
             <div id="game-overlay" class="game-overlay">
               <div class="overlay-content">
                 <div class="overlay-kicker"><span class="live-dot"></span><span id="overlay-kicker">SIMULATION READY</span></div>
-                <h1 id="overlay-title">ENTER THE<br /><em>ARENA.</em></h1>
-                <p id="overlay-copy">One opponent. No cover to hide behind.<br />Keep moving and make every shot count.</p>
+                <h1 id="overlay-title">ENTER THE<br /><em>WILDS.</em></h1>
+                <p id="overlay-copy">Clear the forest, survive each boss, and make every shot count.</p>
                 <button id="start-button" class="start-button" type="button">
-                  <span id="start-button-label">Start simulation</span><span aria-hidden="true">↗</span>
+                  <span id="start-button-label">Start</span><span aria-hidden="true">↗</span>
                 </button>
-                <span class="overlay-footnote">BEST PLAYED FULL SCREEN</span>
+                <span class="overlay-footnote">WASD / ARROWS TO MOVE · MOUSE OR SPACE TO FIRE</span>
               </div>
             </div>
 
             <div class="frame-corner corner-tl" aria-hidden="true"></div>
             <div class="frame-corner corner-br" aria-hidden="true"></div>
+          </div>
+
+          <div id="setup-modal" class="modal-backdrop" aria-hidden="true">
+            <section class="setup-modal" role="dialog" aria-modal="true" aria-labelledby="setup-title">
+              <span class="modal-kicker"><i></i> MISSION SETUP</span>
+              <h2 id="setup-title">Choose your <em>deployment.</em></h2>
+              <label class="select-label" for="level-select">FINAL LEVEL</label>
+              <select id="level-select"></select>
+              <div class="select-label">DIFFICULTY</div>
+              <div class="difficulty-options" role="group" aria-label="Difficulty">
+                <button type="button" data-difficulty="easy">Recruit<span>Forgiving</span></button>
+                <button type="button" data-difficulty="normal" class="selected">Veteran<span>Balanced</span></button>
+                <button type="button" data-difficulty="hard">Nightmare<span>Brutal</span></button>
+              </div>
+              <button id="deploy-button" class="start-button deploy-button" type="button"><span>Deploy</span><span aria-hidden="true">↗</span></button>
+            </section>
           </div>
 
           <div class="game-caption">
@@ -78,52 +95,11 @@
           </div>
         </div>
 
-        <aside class="side-panel">
-          <div class="panel-heading">
-            <span class="panel-index">FIELD GUIDE / 01</span>
-            <h2>Stay alive.<br />Stay <span>moving.</span></h2>
-            <p>A live-fire drill against one autonomous combat unit.</p>
-          </div>
-
-          <div class="opponent-card">
-            <div class="opponent-topline"><span>HOSTILE UNIT</span><span class="unit-status"><i></i> ACTIVE</span></div>
-            <div class="opponent-visual" aria-hidden="true">
-              <div class="scan-line"></div>
-              <div class="unit-silhouette"><i></i><b></b><em></em><small></small></div>
-              <span class="target-mark mark-a"></span>
-              <span class="target-mark mark-b"></span>
-              <span class="target-mark mark-c"></span>
-              <span class="unit-id">EN-01</span>
-            </div>
-            <div class="opponent-meta"><b>WARDEN</b><span>MK. IV / COMBAT AI</span></div>
-            <div class="opponent-meter"><span id="opponent-health-bar"></span></div>
-          </div>
-
-          <div class="controls">
-            <h3>Controls</h3>
-            <div class="control-row">
-              <div class="arrow-keys" aria-label="Arrow keys">
-                <kbd>↑</kbd><span><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span>
-              </div>
-              <div class="control-description"><b>Move &amp; turn</b><span>Navigate the arena</span></div>
-            </div>
-            <div class="control-row">
-              <kbd class="space-key">SPACE</kbd>
-              <div class="control-description"><b>Fire weapon</b><span>Hold to keep firing</span></div>
-            </div>
-          </div>
-
-          <div class="field-note">
-            <span class="note-symbol" aria-hidden="true">!</span>
-            <p>Warden tracks your position. Circling makes you harder to hit.</p>
-          </div>
-          <div class="panel-footer"><span>SIMULATION RULES APPLY</span><span>© DEADLOCK SYSTEMS</span></div>
-        </aside>
       </section>
 
       <footer class="page-footer">
-        <span>NO RECRUITS LEFT BEHIND.</span>
-        <span>ARROW KEYS TO MOVE <i></i> SPACE TO FIRE</span>
+        <span>STAY SHARP.</span>
+        <span>WASD / ARROWS TO MOVE <i></i> MOUSE OR SPACE TO FIRE</span>
         <span class="footer-mark">DL<span> / </span>01</span>
       </footer>
     </main>
