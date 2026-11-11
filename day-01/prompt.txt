@@ -1,15 +1,17 @@
-Please build a website for a 3d 1st person shooter game in an arena against 1 computer opponent controlled by arrow keys and space bar to shoot.
+1st Prompt:
+   Please build a website for a 3d 1st person shooter game in an arena against 1 computer opponent controlled by arrow keys and space bar to shoot.
 
-Okay that's good, I need some improvement:
-1. remove all details from the left side. and
-2. when click STart button show a modal to select the deficulty
-3. In user need to look more human like. You need add a hand with a gun. when user click fire or space button bullet will come from the gun.
-4. instead of one enemy introduces lot's of enemy and give level selection modal also in initial time. if user select 10 then 1 complete then 2 then 3 like this will go to at least select level.
-5. each level add a boss fight and after each level complete the user will have extra hp like if initially have 200 first level complete the hp will be 250 with.
-6. in the bottom of the screen show minmap
-7. add some tree to cover users. I mean i need to look like this a FPS game.
-8. in map add some hp increase objects and gun update objects.
-9. Introduce different types of enemy and each enemy have different type of hp. some have 100 some have 50 some have 150 like this.
-10. user hp and enemy hp and attrack power will be increase based on diffuculti.
+2nd Prompt:
+   Okay that's good, I need some improvement:
+   1. remove all details from the left side. and
+   2. when click STart button show a modal to select the deficulty
+   3. In user need to look more human like. You need add a hand with a gun. when user click fire or space button bullet will come from the gun.
+   4. instead of one enemy introduces lot's of enemy and give level selection modal also in initial time. if user select 10 then 1 complete then 2 then 3 like this will go to at least select level.
+   5. each level add a boss fight and after each level complete the user will have extra hp like if initially have 200 first level complete the hp will be 250 with.
+   6. in the bottom of the screen show minmap
+   7. add some tree to cover users. I mean i need to look like this a FPS game.
+   8. in map add some hp increase objects and gun update objects.
+   9. Introduce different types of enemy and each enemy have different type of hp. some have 100 some have 50 some have 150 like this.
+   10. user hp and enemy hp and attrack power will be increase based on diffuculti.
 
-Note: I think better if you use OOP to build this game.
+   Note: I think better if you use OOP to build this game.
