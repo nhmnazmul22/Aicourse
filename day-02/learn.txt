@@ -9,3 +9,5 @@ AI Software:
 - LLM stateless so it can't memorize our full conversations. I generate the outputs based on input and probability. But how it memorize the conversations. There is play a important role AI Softwares. They used some trick:
    1. Illusion of memory
    2. Reasoning / Thinking
+   3. Tools
+   
