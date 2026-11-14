@@ -10,4 +10,14 @@ AI Software:
    1. Illusion of memory
    2. Reasoning / Thinking
    3. Tools
-   
+   4. Loops
+
+
+Context Engineering:
+   - System prompt: Overall framing
+   - Tools: Description of capabilities
+   - Memory: Resource that persist
+   - Agents.md file (coding agents)
+   - Conversation History/ Messages
+
+Context window: The Context Window is the maximum amount of information an LLM can process in a single request.
