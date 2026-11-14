@@ -6,7 +6,7 @@ LLM:
 
 AI Software:
 - AI Software uses LLM to complete the business goal. Like: ChatGPT, Cursor etc.
-- LLM stateless so it can't memorize our full conversations. I generate the outputs based on input and probability.
+- LLM stateless so it can't memorize our full conversations. It generate the outputs based on input and probability.
   But how it memorize the conversations. There is play a important role AI Softwares. They used some trick:
    1. Illusion of memory
    2. Reasoning / Thinking

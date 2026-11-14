@@ -12,6 +12,6 @@
    7. add some tree to cover users. I mean i need to look like this a FPS game.
    8. in map add some hp increase objects and gun update objects.
    9. Introduce different types of enemy and each enemy have different type of hp. some have 100 some have 50 some have 150 like this.
-   10. user hp and enemy hp and attrack power will be increase based on diffuculti.
+   10. user hp and enemy hp and attack power will be increase based on difficult.
 
    Note: I think better if you use OOP to build this game.
