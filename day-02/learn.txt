@@ -21,4 +21,30 @@ Context Engineering:
    - Agents.md file (coding agents)
    - Conversation History/ Messages
 
-Context window: The Context Window is the maximum amount of information an LLM can process in a single request.
+Context window: The context window is the maximum amount of information an LLM can process in a single request. When a context window is full of limited token then it can be give bed/unexpected responses.
+
+
+Mastery of Agent.md:
+   - A markdown file (Agents.md) file used to prepare and instruct AI coding agents with project-specific context and rule.
+   - This Agents.md file normally placed in project root direct and it always loaded into the context window for the agent.
+   - This File can be placed in sub-directories, but these only loaded into context when the agent working on these
+     directories or deeper subfolder.
+   - The deeper agents.md file overrides the root agents.md file rules, allowing for specific localized instructions.
+
+Best practice of writing agent.md file:
+   - Keep instructions concise, specific, clear, and assertive. Avoid unnecessary verbosity to save context window space.
+   - Focus on Positives: Frame rules around what the agent should do rather than what it should not do, as LLMs process positive
+     instructions more reliably than negative constraints.
+   - Core Components to Include:
+      - Project goals and success criteria checklists.
+      - Links to optional secondary documents.
+      - Clear coding standards to address past agent mistakes (e.g., keeping code simple, minimizing comments, preventing overly
+      defensive exception handling).
+      - Explicit file formatting instructions (e.g., short READMEs without emojis).
+      - Environment execution instructions (e.g., specifying execution tools like uv run).
+
+The ways of writing Agents.md file:
+   - The 2025 Mindset (Hands-On Optimization): Focuses heavily on carefully crafting, maintaining, pruning, and updating AGENTS.md
+     files. It involves frequently stopping the agent, clearing its context, and starting fresh with refined instructions.
+   - The 2026 Mindset (Hands-Off Delegation): Moving toward giving agents high-level goals and letting them self-correct through
+     loops, skills, and multi-agent swarms without micro-managing prompt details.
