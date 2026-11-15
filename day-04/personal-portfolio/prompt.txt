@@ -1,3 +1,7 @@
-Prompt 1: Please build me a professional website running locally. My profile in Nhm-Nazmul-CV.pdf. Make the website stunning: enterprise meets edgy. It should include about me, my carrer journey, links to a portofio (for feature). Iterate to make it as slick and professional as possiable and let me know only when completed. use NextJS.
+Prompt 1: Please build me a professional website running locally. My profile in Nhm-Nazmul-CV.pdf. Make the website stunning: enterprise meets edgy. It should include about me, my career journey, links to a portfolio (for feature). Iterate to make it as slick and professional as possible and let me know only when completed. use NextJS.
 
-Prompt 2: That's great. Please now add the ability to have an AI chat with a "Digital Twin" which can answer questions about my career. Please use OpenRouter. My OPEN_ROUTER_KEY is in the .env file in the project root. Please use the model named "openai/gpt-oss-120b". Make this changes, make sure it works, let me know when read for me. 
+Prompt 2: That's great. Please now add the ability to have an AI chat with a "Digital Twin" which can answer questions about my career. Please use OpenRouter. My OPEN_ROUTER_KEY is in the .env file in the project root. Please use the model named "openai/gpt-oss-120b". Make this changes, make sure it works, let me know when read for me.
+
+Prompt 3: Please now write me a comprehensive tutorial in markdown called tutorial.md that is suitable for a complete beginner in frontend coding, to walk me through what you have done here. Include a summery of the technology, a high level walk through and a detailed code review with code samples. End with 5 suggestions for ways that the code could be improved based on a self-review.
+
+Prompt 4: Please do a comprehensive code review of this project and write the result to review.md including any remedial actions needed. Don't actually changes any code.
