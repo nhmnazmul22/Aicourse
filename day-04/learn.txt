@@ -1,0 +1,15 @@
+Five principal for successful Vibe coding:
+   - Invest in AGENTS.md; Concisely: spec, style, success
+   - Start SIMPLE
+   - Work incrementally; test constantly; validated success criteria
+   - Don't get lazy - challenges & demand evidence
+   - Handle Frustration with style
+
+More principal need to in mind:
+   - Understand before implementing
+   - Give agents boundaries/scope
+   - Use Git as your safety net
+   - Keep tasks independent
+   - Protect your fundamentals
+   - Use the right autonomy level
+   - Avoid unnecessary context
