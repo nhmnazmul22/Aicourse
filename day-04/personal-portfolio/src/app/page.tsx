@@ -55,6 +55,7 @@ export default function Home() {
           <a href="#about">About</a>
           <a href="#journey">Journey</a>
           <a href="#work">Selected work</a>
+          <a href="#digital-twin">AI twin</a>
         </nav>
         <a className="header-contact" href="mailto:nhmnazmul22@gmail.com">Let’s talk <Arrow diagonal /></a>
       </header>
@@ -152,9 +153,13 @@ export default function Home() {
         <div className="skill-table">{skillGroups.map((group) => <div className="skill-row" key={group.label}><h3>{group.label}</h3><p>{group.skills}</p><span aria-hidden="true">↗</span></div>)}</div>
       </section>
 
+      <ChatTwin />
+
       <footer className="footer-section">
         <div className="wrap footer-inner"><div className="section-kicker"><span className="kicker-mark" /> Have a good idea?</div><h2>Let’s make it<br /><span>real.</span></h2><div className="footer-bottom"><a href="mailto:nhmnazmul22@gmail.com" className="footer-email">nhmnazmul22@gmail.com <Arrow diagonal /></a><div className="social-links"><a href="https://github.com/nhmnazmul22" target="_blank" rel="noreferrer">GitHub <Arrow diagonal /></a><a href="https://www.linkedin.com/in/nhm-nazmul" target="_blank" rel="noreferrer">LinkedIn <Arrow diagonal /></a><a href="tel:+8801940520508">+880 1940 520508</a></div></div><div className="footer-legal"><Wordmark /><span>© 2026 Nazmul Hasan Mamun</span><a href="#top">Back to top ↑</a></div></div>
       </footer>
     </main>
   )
 }
+import ChatTwin from './ChatTwin'
+

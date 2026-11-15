@@ -1,1 +1,3 @@
 Prompt 1: Please build me a professional website running locally. My profile in Nhm-Nazmul-CV.pdf. Make the website stunning: enterprise meets edgy. It should include about me, my carrer journey, links to a portofio (for feature). Iterate to make it as slick and professional as possiable and let me know only when completed. use NextJS.
+
+Prompt 2: That's great. Please now add the ability to have an AI chat with a "Digital Twin" which can answer questions about my career. Please use OpenRouter. My OPEN_ROUTER_KEY is in the .env file in the project root. Please use the model named "openai/gpt-oss-120b". Make this changes, make sure it works, let me know when read for me. 
