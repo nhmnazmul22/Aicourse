@@ -1,0 +1,1 @@
+Prompt 1: Please build me a professional website running locally. My profile in Nhm-Nazmul-CV.pdf. Make the website stunning: enterprise meets edgy. It should include about me, my carrer journey, links to a portofio (for feature). Iterate to make it as slick and professional as possiable and let me know only when completed. use NextJS.
