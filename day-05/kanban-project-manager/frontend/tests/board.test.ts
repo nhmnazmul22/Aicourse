@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addCard, deleteCard, initialBoard, moveCard, renameColumn, updateCard, type Board } from "./board";
+import { addCard, deleteCard, initialBoard, moveCard, renameColumn, updateCard, type Board } from "../src/lib/board";
 
 const board = (): Board => initialBoard.map((column) => ({ ...column, cards: column.cards.map((card) => ({ ...card })) }));
 

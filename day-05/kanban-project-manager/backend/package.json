@@ -4,7 +4,8 @@
   "private": true,
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy:frontend",
+    "copy:frontend": "mkdir -p dist/frontend && cp -r ../frontend/out dist/frontend/out 2>/dev/null || true",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "test": "vitest run"
