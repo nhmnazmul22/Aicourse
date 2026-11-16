@@ -36,9 +36,13 @@ For the MVP, this will run locally (in a docker container)
 - Testing: Vitest for unit tests, Playwright for e2e tests, ESLint for lint
 - TypeScript strict mode
 
+## Starting Point
+
+A working MVP of the frontend has been built and is already in frontend. This is not yet designed for the Docker setup. It's a pure frontend-only demo.
+
 ## Color Scheme
 
-- Accent Yellow: `#ecad0a` - accent lines, highlights
+- Accent Yellow: `#ecad0a` - accent lisnes, highlights
 - Blue Primary: `#209dd7` - links, key sections
 - Purple Secondary: `#753991` - submit buttons, important actions
 - Dark Navy: `#032147` - main headings
@@ -80,3 +84,8 @@ For the MVP, this will run locally (in a docker container)
   - Liskov Substitution: components should be replaceable without breaking the app
   - Interface Segregation: keep props and APIs small and focused
   - Dependency Inversion: depend on abstractions, not concrete implementations
+
+## Working documentation
+
+All documents for planning and executing this project will be in the docs/ directory.
+Please review the docs/PLAN.md document before proceeding.
