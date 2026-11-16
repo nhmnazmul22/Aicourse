@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+docker compose down
+
+echo "Backend stopped"
