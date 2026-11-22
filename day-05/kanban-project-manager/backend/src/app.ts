@@ -1,8 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import path from 'path';
 import fs from 'fs';
+import authRoutes from './routes/auth';
+import { errorMiddleware, notFoundHandler } from './middleware/error';
 
 export function createApp() {
   const app = express();
@@ -18,11 +21,14 @@ export function createApp() {
     })
   );
   app.use(cors());
+  app.use(cookieParser());
   app.use(express.json());
 
   app.get('/api/hello', (_req, res) => {
     res.json({ message: 'hello world' });
   });
+
+  app.use('/api/auth', authRoutes);
 
   const frontendOut = path.join(__dirname, 'frontend/out');
   const fallbackOut = path.join(__dirname, '../../frontend/out');
@@ -39,6 +45,9 @@ export function createApp() {
       res.send('<html><body><h1>hello world</h1></body></html>');
     });
   }
+
+  app.use(notFoundHandler);
+  app.use(errorMiddleware);
 
   return app;
 }
