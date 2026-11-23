@@ -2,6 +2,7 @@ import { User, type IUser } from "../models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
+import { AppError } from "../middleware/error";
 
 export class AuthService {
   async signup(input: {
@@ -13,9 +14,7 @@ export class AuthService {
   }): Promise<{ user: Omit<IUser, "passwordHash">; token: string }> {
     const existing = await User.findOne({ email: input.email });
     if (existing) {
-      const err = new Error("Email already registered") as Error & { statusCode?: number };
-      err.statusCode = 409;
-      throw err;
+      throw new AppError("Email already registered", 409);
     }
 
     const passwordHash = await bcrypt.hash(input.password, 12);
@@ -42,16 +41,12 @@ export class AuthService {
   }): Promise<{ user: Omit<IUser, "passwordHash">; token: string }> {
     const user = await User.findOne({ email: input.email }).select("+passwordHash");
     if (!user) {
-      const err = new Error("Invalid email or password") as Error & { statusCode?: number };
-      err.statusCode = 401;
-      throw err;
+      throw new AppError("Invalid email or password", 401);
     }
 
     const isValid = await bcrypt.compare(input.password, user.passwordHash);
     if (!isValid) {
-      const err = new Error("Invalid email or password") as Error & { statusCode?: number };
-      err.statusCode = 401;
-      throw err;
+      throw new AppError("Invalid email or password", 401);
     }
 
     const token = this.signToken(user._id.toString());

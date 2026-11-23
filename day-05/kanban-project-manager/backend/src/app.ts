@@ -5,7 +5,12 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import fs from 'fs';
 import authRoutes from './routes/auth';
+import projectRoutes from './routes/projects';
+import columnRoutes from './routes/columns';
+import cardRoutes from './routes/cards';
+import moveRoutes from './routes/move';
 import { errorMiddleware, notFoundHandler } from './middleware/error';
+import { authMiddleware } from './middleware/auth';
 
 export function createApp() {
   const app = express();
@@ -29,6 +34,10 @@ export function createApp() {
   });
 
   app.use('/api/auth', authRoutes);
+  app.use('/api/projects', authMiddleware, projectRoutes);
+  app.use('/api/projects/:id/columns', authMiddleware, columnRoutes);
+  app.use('/api/projects/:id/columns/:columnId/cards', authMiddleware, cardRoutes);
+  app.use('/api/projects/:id/cards', authMiddleware, moveRoutes);
 
   const frontendOut = path.join(__dirname, 'frontend/out');
   const fallbackOut = path.join(__dirname, '../../frontend/out');

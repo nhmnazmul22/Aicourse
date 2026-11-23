@@ -30,7 +30,7 @@ export function errorMiddleware(
   } else if (err.name === "CastError") {
     statusCode = 400;
     message = "Invalid resource ID";
-  } else if ((err as any).code === 11000) {
+  } else if ((err as any).code === 11000 || (err as any).name === "MongoServerError") {
     statusCode = 409;
     message = "Duplicate field value";
   }
