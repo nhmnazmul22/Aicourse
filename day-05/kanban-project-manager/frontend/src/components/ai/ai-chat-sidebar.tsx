@@ -3,6 +3,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/services/api";
+import { useBoardStore } from "@/lib/board-store";
+
+type AIUpdate = {
+  type: "add" | "edit" | "delete" | "move";
+  [key: string]: unknown;
+};
+
+type AIBoardResponse = {
+  response: string;
+  updates?: AIUpdate[];
+};
 
 export function AIChatSidebar() {
   const [open, setOpen] = useState(false);
@@ -10,20 +21,27 @@ export function AIChatSidebar() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const projectId = useBoardStore((state) => state.project?.id);
+  const loadBoard = useBoardStore((state) => state.loadBoard);
+
   function sendMessage() {
-    if (!input.trim()) return;
+    if (!input.trim() || !projectId) return;
     const userMessage = input;
     setInput("");
     setLoading(true);
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
 
     api
-      .post<{ response: string }>("/api/ai/board", {
+      .post<AIBoardResponse>("/api/ai/board", {
         message: userMessage,
         history: messages,
+        projectId,
       })
       .then((data) => {
         setMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
+        if (data.updates && data.updates.length > 0) {
+          loadBoard(projectId);
+        }
         setLoading(false);
       })
       .catch(() => {

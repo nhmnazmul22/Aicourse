@@ -10,6 +10,7 @@ import columnRoutes from './routes/columns';
 import cardRoutes from './routes/cards';
 import moveRoutes from './routes/move';
 import aiRoutes from './routes/ai';
+import aiTestRoutes from './routes/ai-test';
 import { errorMiddleware, notFoundHandler } from './middleware/error';
 import { authMiddleware } from './middleware/auth';
 
@@ -40,6 +41,7 @@ export function createApp() {
   app.use('/api/projects/:id/columns/:columnId/cards', authMiddleware, cardRoutes);
   app.use('/api/projects/:id/cards', authMiddleware, moveRoutes);
   app.use('/api/ai', authMiddleware, aiRoutes);
+  app.use('/api/ai', authMiddleware, aiTestRoutes);
 
   const frontendOut = path.join(__dirname, 'frontend/out');
   const fallbackOut = path.join(__dirname, '../../frontend/out');

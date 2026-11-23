@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { useDroppable } from "@dnd-kit/react";
 import { isSortable, useSortable } from "@dnd-kit/react/sortable";
-import { addCard, deleteCard, initialBoard, moveCard, renameColumn, updateCard, type Board, type BoardColumn, type Card } from "@/lib/board";
+import { useBoardStore } from "@/lib/board-store";
+import type { BoardColumn } from "@/services/board.service";
 
 function Icon({ name }: { name: "plus" | "more" | "close" | "grip" | "arrow" }) {
   if (name === "plus") return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" /></svg>;
@@ -15,10 +16,10 @@ function Icon({ name }: { name: "plus" | "more" | "close" | "grip" | "arrow" }) 
 }
 
 function CardItem({ card, index, columnId, onEdit, onDelete }: {
-  card: Card;
+  card: BoardColumn["cards"][number];
   index: number;
   columnId: string;
-  onEdit: (card: Card) => void;
+  onEdit: (card: BoardColumn["cards"][number]) => void;
   onDelete: (id: string) => void;
 }) {
   const { ref, isDragging } = useSortable({ id: card.id, index, group: columnId, type: "card", accept: "card" });
@@ -49,7 +50,7 @@ function Column({ column, onRename, onAdd, onEdit, onDelete }: {
   column: BoardColumn;
   onRename: (id: string, name: string) => void;
   onAdd: (columnId: string, title: string, details: string) => void;
-  onEdit: (card: Card) => void;
+  onEdit: (card: BoardColumn["cards"][number]) => void;
   onDelete: (id: string) => void;
 }) {
   const [renaming, setRenaming] = useState(false);
@@ -123,7 +124,7 @@ function Column({ column, onRename, onAdd, onEdit, onDelete }: {
   );
 }
 
-function EditDialog({ card, onSave, onClose }: { card: Card; onSave: (id: string, title: string, details: string) => void; onClose: () => void }) {
+function EditDialog({ card, columnId, onSave, onClose }: { card: BoardColumn["cards"][number]; columnId: string; onSave: (id: string, columnId: string, title: string, details: string) => void; onClose: () => void }) {
   const [title, setTitle] = useState(card.title);
   const [details, setDetails] = useState(card.details);
   return (
@@ -133,7 +134,7 @@ function EditDialog({ card, onSave, onClose }: { card: Card; onSave: (id: string
           <div><span className="dialog-kicker">Card details</span><h2 id="edit-title">Edit card</h2></div>
           <button className="icon-button" type="button" aria-label="Close dialog" onClick={onClose}><Icon name="close" /></button>
         </div>
-        <form onSubmit={(event) => { event.preventDefault(); if (title.trim()) onSave(card.id, title, details); }}>
+        <form onSubmit={(event) => { event.preventDefault(); if (title.trim()) onSave(card.id, columnId, title, details); }}>
           <label htmlFor="edit-card-title">Title</label>
           <input id="edit-card-title" autoFocus value={title} onChange={(event) => setTitle(event.target.value)} />
           <label htmlFor="edit-card-details">Details</label>
@@ -148,16 +149,33 @@ function EditDialog({ card, onSave, onClose }: { card: Card; onSave: (id: string
   );
 }
 
-export default function BoardView() {
-  const [board, setBoard] = useState<Board>(() => initialBoard.map((column) => ({ ...column, cards: [...column.cards] })));
-  const [editingCard, setEditingCard] = useState<Card | null>(null);
-  const boardBeforeDrag = useRef<Board | null>(null);
-  const totalCards = board.reduce((total, column) => total + column.cards.length, 0);
+export default function BoardView({ projectId }: { projectId: string }) {
+  const { project, columns, isLoading, error, renameColumn, addCard, updateCard, deleteCard, moveCard } = useBoardStore(
+    (state) => ({
+      project: state.project,
+      columns: state.columns,
+      isLoading: state.isLoading,
+      error: state.error,
+      renameColumn: state.renameColumn,
+      addCard: state.addCard,
+      updateCard: state.updateCard,
+      deleteCard: state.deleteCard,
+      moveCard: state.moveCard,
+    })
+  );
 
-  function handleDragOver(event: import("@dnd-kit/react").DragOverEvent) {
-    const { source, target } = event.operation;
+  const [editingCard, setEditingCard] = useState<BoardColumn["cards"][number] | null>(null);
+  const boardBeforeDrag = useRef<BoardColumn[] | null>(null);
+  const totalCards = columns.reduce((total, column) => total + column.cards.length, 0);
+
+  useEffect(() => {
+    useBoardStore.getState().loadBoard(projectId);
+  }, [projectId]);
+
+  function handleDragOver(_event: import("@dnd-kit/react").DragOverEvent) {
+    const { source, target } = _event.operation;
     if (!source || !isSortable(source) || source.type !== "card") return;
-    event.preventDefault();
+    _event.preventDefault();
     if (!target) return;
     const targetColumn = isSortable(target)
       ? String(target.group ?? "")
@@ -165,66 +183,77 @@ export default function BoardView() {
     if (!targetColumn) return;
     if (source.id === target.id) return;
     const targetIndex = isSortable(target) ? target.index : Number.MAX_SAFE_INTEGER;
-    setBoard((current) => {
-      const sourceColumn = current.find((column) => column.cards.some((card) => card.id === String(source.id)));
-      const destination = current.find((column) => column.id === targetColumn);
-      if (!sourceColumn || !destination) return current;
-      const sourceIndex = sourceColumn.cards.findIndex((card) => card.id === String(source.id));
-      if (sourceColumn.id === targetColumn && sourceIndex === targetIndex) return current;
-      return moveCard(current, String(source.id), targetColumn, targetIndex);
-    });
+    boardBeforeDrag.current = columns;
+    const sourceColumn = columns.find((column) => column.cards.some((card) => card.id === String(source.id)));
+    const destination = columns.find((column) => column.id === targetColumn);
+    if (!sourceColumn || !destination) return;
+    const sourceIndex = sourceColumn.cards.findIndex((card) => card.id === String(source.id));
+    if (sourceColumn.id === targetColumn && sourceIndex === targetIndex) return;
+    moveCard(String(source.id), targetColumn, targetIndex);
   }
 
-  function handleDragEnd(event: import("@dnd-kit/react").DragEndEvent) {
-    if (event.canceled || !event.operation.target) {
-      if (boardBeforeDrag.current) setBoard(boardBeforeDrag.current);
-    }
+  function handleDragEnd() {
     boardBeforeDrag.current = null;
   }
 
-  function handleAdd(columnId: string, title: string, details: string) {
-    setBoard((current) => addCard(current, columnId, { id: crypto.randomUUID(), title: title.trim(), details: details.trim() }));
-  }
+  const columnIdFromCard = (cardId: string) => {
+    const col = columns.find((c) => c.cards.some((card) => card.id === cardId));
+    return col?.id;
+  };
 
-  function saveEdit(id: string, title: string, details: string) {
-    setBoard((current) => updateCard(current, id, title.trim(), details.trim()));
-    setEditingCard(null);
+  function handleDeleteCard(cardId: string) {
+    const cid = columnIdFromCard(cardId);
+    if (cid) deleteCard(cardId, cid);
   }
 
   return (
     <main className="app-shell">
       <header className="topbar">
         <a className="brand" href="#board" aria-label="Flowboard home"><span className="brand-mark"><i /><i /><i /></span><span>flowboard</span></a>
-        <div className="topbar-right"><span className="workspace-label"><span className="workspace-dot" /> Studio workspace</span><span className="avatar" aria-label="Your profile">A</span></div>
+        <div className="topbar-right"><span className="workspace-label"><span className="workspace-dot" /> {project?.name || "Studio workspace"}</span><span className="avatar" aria-label="Your profile">A</span></div>
       </header>
 
-      <div className="page-content" id="board">
-        <section className="board-intro">
-          <div>
-            <p className="breadcrumb">Projects <Icon name="arrow" /> <span>Product studio</span></p>
-            <div className="board-title-row"><h1>Product sprint</h1><span className="live-indicator"><i /> In motion</span></div>
-            <p className="board-subtitle">A clear view of what the team is shaping this week.</p>
+      {isLoading && !project && (
+        <div className="auth-page">
+          <div className="auth-card">
+            <div className="auth-spinner" />
           </div>
-          <div className="board-summary"><span className="summary-number">{totalCards}</span><span className="summary-label">cards in play</span><span className="summary-rule" /></div>
-        </section>
+        </div>
+      )}
 
-        <section className="board-wrap" aria-label="Product sprint board">
-          <div className="board-toolbar"><div className="toolbar-title"><span className="toolbar-indicator" /> Sprint board <span className="toolbar-divider">/</span> <span className="toolbar-muted">Week 24</span></div><p>Drag cards to move work forward</p></div>
-          <DragDropProvider
-            sensors={[{ plugin: PointerSensor, options: { preventActivation: () => false } }, KeyboardSensor]}
-            onDragStart={() => { boardBeforeDrag.current = board; }}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="board-columns">
-              {board.map((column) => <Column key={column.id} column={column} onRename={(id, name) => setBoard((current) => renameColumn(current, id, name))} onAdd={handleAdd} onEdit={setEditingCard} onDelete={(id) => setBoard((current) => deleteCard(current, id))} />)}
+      {!isLoading && (
+        <div className="page-content" id="board">
+          <section className="board-intro">
+            <div>
+              <p className="breadcrumb">Projects <Icon name="arrow" /> <span>{project?.name || "Product studio"}</span></p>
+              <div className="board-title-row"><h1>{project?.name || "Product sprint"}</h1><span className="live-indicator"><i /> In motion</span></div>
+              <p className="board-subtitle">A clear view of what the team is shaping this week.</p>
             </div>
-          </DragDropProvider>
-        </section>
-        <footer className="page-footer"><span>Small steps, clear progress.</span><span>Changes are temporary and reset when you reload.</span></footer>
-      </div>
+            <div className="board-summary"><span className="summary-number">{totalCards}</span><span className="summary-label">cards in play</span><span className="summary-rule" /></div>
+          </section>
 
-      {editingCard && <EditDialog key={editingCard.id} card={editingCard} onSave={saveEdit} onClose={() => setEditingCard(null)} />}
+          {error && (
+            <div className="auth-error" role="alert">{error}</div>
+          )}
+
+          <section className="board-wrap" aria-label={`${project?.name || "Product sprint"} board`}>
+            <div className="board-toolbar"><div className="toolbar-title"><span className="toolbar-indicator" /> Sprint board <span className="toolbar-divider">/</span> <span className="toolbar-muted">Week 24</span></div><p>Drag cards to move work forward</p></div>
+            <DragDropProvider
+              sensors={[{ plugin: PointerSensor, options: { preventActivation: () => false } }, KeyboardSensor]}
+              onDragStart={() => { boardBeforeDrag.current = columns; }}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="board-columns">
+                {columns.map((column) => <Column key={column.id} column={column} onRename={(id, name) => renameColumn(id, name)} onAdd={(columnId, title, details) => addCard(columnId, title, details)} onEdit={setEditingCard} onDelete={(id) => handleDeleteCard(id)} />)}
+              </div>
+            </DragDropProvider>
+          </section>
+          <footer className="page-footer"><span>Small steps, clear progress.</span></footer>
+        </div>
+      )}
+
+      {editingCard && <EditDialog key={editingCard.id} card={editingCard} columnId={columnIdFromCard(editingCard.id) || ""} onSave={(id, cid, title, details) => updateCard(id, cid, title, details)} onClose={() => setEditingCard(null)} />}
     </main>
   );
 }
