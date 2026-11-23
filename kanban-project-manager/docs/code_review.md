@@ -226,3 +226,34 @@ All identified issues from the review have been resolved and verified with compl
   - **Frontend Vitest**: 6 test files, 49 tests passing (`npm test`).
   - **Frontend Playwright E2E**: 11 tests passing across Desktop and Mobile Chromium (`npm run test:e2e`).
   - **Linting & Type Checking**: 0 lint errors, 0 TypeScript errors in both frontend and backend (`npm run build`).
+
+---
+
+## 8. Resolution of User-Reported UI Issues
+
+### 8.1 Hard Reload Screen Flicker & Cookie Auth
+
+- **Root Cause**: On hard reload, client state rehydrated after the initial render tick. Rendering the login page prematurely caused a flicker before checking token presence. Furthermore, in statically exported Next.js apps (`output: "export"`), Next.js forbids `proxy.ts`/`middleware.ts` and throws `Middleware cannot be used with "output: export"`.
+- **Solution**:
+  - Synced authentication token with `document.cookie` (7-day max-age, SameSite=Lax) on login, signup, rehydration, and cleared on logout.
+  - Implemented `useSyncExternalStore` for hydration detection and initial spinner rendering during auth verification.
+  - Hard reloads for authenticated sessions now stay on the loading spinner until the user session and board are resolved, completely eliminating login screen flicker.
+  - Cleanly removed conflicting `proxy.ts` to allow static export without runtime or Next dev server crashes.
+
+### 8.2 Infinite API Polling & Automatic Dropdown Switching
+
+- **Root Cause**: `page.tsx` and `board.tsx` were concurrently loading project lists and board data without guarding against re-initialization. Whenever state updated, `page.tsx` reset the active project to `projects[0]`, clobbering user selection and triggering duplicate calls to `/api/projects` and `/api/projects/:id/board`.
+- **Solution**:
+  - Added user-scoped initialization reference (`initialLoadedUserRef`) in `page.tsx` so initial board data is only fetched once per login session.
+  - Ensured `page.tsx` preserves any currently selected project instead of forcing `projects[0]`.
+  - Added `lastLoadedBoardRef` in `board.tsx` to guard against duplicate board fetches when `projectId` has not changed or is already loaded.
+  - Removed redundant `loadProjects()` call from `BoardView` effect so project switching only loads the target board.
+
+### 8.3 Floating Chat Widget Placement & Brand Styling
+
+- **Root Cause**: The chat component was anchored as a fixed full-height right sidebar drawer, consuming 56px of horizontal space and obstructing the Kanban board. It also used generic purple and blue Tailwind utility classes instead of official brand colors.
+- **Solution**:
+  - Re-implemented the AI assistant as a bottom-right floating widget (`fixed bottom-6 right-6 z-50`).
+  - Styled the Floating Action Button with Purple Secondary (`#753991`) and Accent Yellow border (`#ecad0a`).
+  - Designed the floating popup window with a Dark Navy header (`#032147`), Accent Yellow accent line (`#ecad0a`), Blue Primary user chat bubbles (`#209dd7`), Dark Navy assistant text (`#032147`), Gray text supporting details (`#888888`), and Purple Secondary send action button (`#753991`).
+  - Preserved all accessibility labels and interactive roles, passing all 11 Playwright E2E tests and unit suites.

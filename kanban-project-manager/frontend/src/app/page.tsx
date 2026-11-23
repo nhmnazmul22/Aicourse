@@ -135,55 +135,46 @@ export default function Home() {
     loadInitialData();
   }, [user, loadInitialData]);
 
-  // Initial render (SSR and before client auth verification completes):
-  // Renders the spinner on both server and client initially.
-  // This guarantees:
-  // 1. Zero hydration mismatch between server and client.
-  // 2. On hard reload for an authenticated user, they never see a flash of the login page.
   if (!isMounted || !authChecked || (!user && (token || isLoading))) {
     return (
-      <div className="auth-page">
-        <div className="auth-card">
-          <div className="auth-spinner" />
+      <div className="auth-page min-h-screen flex items-center justify-center bg-paper">
+        <div className="auth-card p-8 bg-white border border-line rounded-xl shadow-xs">
+          <div className="auth-spinner w-8 h-8 border-[3px] border-[#e1e7ec] border-t-blue rounded-full animate-spin mx-auto" />
         </div>
       </div>
     );
   }
 
-  // Auth check complete and user is not authenticated: show login page
   if (!user) {
     return <LoginPage />;
   }
 
-  // Authenticated, loading project data
   if (!projectLoaded) {
     return (
-      <div className="auth-page">
-        <div className="auth-card">
-          <div className="auth-spinner" />
+      <div className="auth-page min-h-screen flex items-center justify-center bg-paper">
+        <div className="auth-card p-8 bg-white border border-line rounded-xl shadow-xs">
+          <div className="auth-spinner w-8 h-8 border-[3px] border-[#e1e7ec] border-t-blue rounded-full animate-spin mx-auto" />
         </div>
       </div>
     );
   }
 
-  // Authenticated and loaded, but no project found
   if (!project) {
     return (
-      <div className="auth-page">
-        <div className="auth-card" style={{ textAlign: "center" }}>
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 600, color: "#032147", marginBottom: "0.5rem" }}>
+      <div className="auth-page min-h-screen flex items-center justify-center bg-paper p-4">
+        <div className="auth-card w-full max-w-[400px] p-8 bg-white border border-line rounded-xl shadow-xs text-center">
+          <h2 className="text-xl font-bold text-navy mb-2">
             {loadError || "No project found"}
           </h2>
-          <p style={{ color: "#888888", fontSize: "0.875rem", marginBottom: "1.5rem" }}>
+          <p className="text-sm text-support mb-6">
             {loadError
               ? "We encountered an issue loading your board."
               : "Create your first project to get started."}
           </p>
-          <div style={{ display: "flex", justifyContent: "center", gap: "0.75rem" }}>
+          <div className="flex justify-center gap-3">
             <button
               type="button"
-              className="auth-submit"
-              style={{ width: "auto", padding: "0.5rem 1.25rem" }}
+              className="px-4 py-2 bg-purple hover:bg-purple/90 text-white text-sm font-semibold rounded-md cursor-pointer"
               onClick={async () => {
                 setProjectLoaded(false);
                 setLoadError(null);
@@ -204,8 +195,7 @@ export default function Home() {
             </button>
             <button
               type="button"
-              className="auth-submit"
-              style={{ width: "auto", padding: "0.5rem 1.25rem", backgroundColor: "#209dd7" }}
+              className="px-4 py-2 bg-blue hover:bg-blue/90 text-white text-sm font-semibold rounded-md cursor-pointer"
               onClick={() => {
                 setProjectLoaded(false);
                 loadInitialData();
@@ -215,15 +205,7 @@ export default function Home() {
             </button>
             <button
               type="button"
-              style={{
-                padding: "0.5rem 1.25rem",
-                borderRadius: "0.375rem",
-                border: "1px solid #d1d5db",
-                backgroundColor: "#ffffff",
-                color: "#374151",
-                cursor: "pointer",
-                fontWeight: 500,
-              }}
+              className="px-4 py-2 border border-line bg-white hover:bg-gray-50 text-ink text-sm font-medium rounded-md cursor-pointer"
               onClick={() => {
                 initialLoadedUserRef.current = null;
                 logout();

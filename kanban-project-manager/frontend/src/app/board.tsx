@@ -6,388 +6,16 @@ import {
   KeyboardSensor,
   PointerSensor,
 } from "@dnd-kit/react";
-import { useDroppable } from "@dnd-kit/react";
-import { isSortable, useSortable } from "@dnd-kit/react/sortable";
+import { isSortable } from "@dnd-kit/react/sortable";
 import { useBoardStore } from "@/lib/board-store";
 import { useAuthStore } from "@/lib/auth-store";
 import { authService } from "@/services/auth.service";
-import type { BoardColumn } from "@/services/board.service";
-
-function Icon({
-  name,
-}: {
-  name: "plus" | "more" | "close" | "grip" | "arrow";
-}) {
-  if (name === "plus")
-    return (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <path d="M10 4v12M4 10h12" />
-      </svg>
-    );
-  if (name === "close")
-    return (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <path d="m5 5 10 10M15 5 5 15" />
-      </svg>
-    );
-  if (name === "more")
-    return (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <circle cx="4" cy="10" r="1" />
-        <circle cx="10" cy="10" r="1" />
-        <circle cx="16" cy="10" r="1" />
-      </svg>
-    );
-  if (name === "grip")
-    return (
-      <svg viewBox="0 0 16 16" aria-hidden="true">
-        <circle cx="5" cy="4" r="1" />
-        <circle cx="11" cy="4" r="1" />
-        <circle cx="5" cy="8" r="1" />
-        <circle cx="11" cy="8" r="1" />
-        <circle cx="5" cy="12" r="1" />
-        <circle cx="11" cy="12" r="1" />
-      </svg>
-    );
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true">
-      <path d="M4 10h12m-5-5 5 5-5 5" />
-    </svg>
-  );
-}
-
-function CardItem({
-  card,
-  index,
-  columnId,
-  onEdit,
-  onDelete,
-}: {
-  card: BoardColumn["cards"][number];
-  index: number;
-  columnId: string;
-  onEdit: (card: BoardColumn["cards"][number]) => void;
-  onDelete: (id: string) => void;
-}) {
-  const { ref, isDragging } = useSortable({
-    id: card.id,
-    index,
-    group: columnId,
-    type: "card",
-    accept: "card",
-  });
-
-  return (
-    <article
-      ref={ref}
-      role="article"
-      className={`task-card${isDragging ? " is-dragging" : ""}`}
-      aria-label={card.title}
-    >
-      <div className="task-card-top">
-        <span className="drag-grip" aria-hidden="true">
-          <Icon name="grip" />
-        </span>
-        <button
-          className="icon-button task-menu"
-          type="button"
-          aria-label={`Edit ${card.title}`}
-          onClick={() => onEdit(card)}
-        >
-          <Icon name="more" />
-        </button>
-      </div>
-      <button className="task-copy" type="button" onClick={() => onEdit(card)}>
-        <span className="task-title">{card.title}</span>
-        {card.details && <span className="task-details">{card.details}</span>}
-      </button>
-      <div className="task-card-bottom">
-        <span className="task-mark" aria-hidden="true">
-          {card.title.slice(0, 1).toUpperCase()}
-        </span>
-        <button
-          className="delete-task"
-          type="button"
-          aria-label={`Delete ${card.title}`}
-          onClick={() => onDelete(card.id)}
-        >
-          <Icon name="close" />
-        </button>
-      </div>
-    </article>
-  );
-}
-
-function Column({
-  column,
-  onRename,
-  onAdd,
-  onEdit,
-  onDelete,
-}: {
-  column: BoardColumn;
-  onRename: (id: string, name: string) => void;
-  onAdd: (columnId: string, title: string, details: string) => void;
-  onEdit: (card: BoardColumn["cards"][number]) => void;
-  onDelete: (id: string) => void;
-}) {
-  const [renaming, setRenaming] = useState(false);
-  const [name, setName] = useState(column.name);
-  const cancelRenameBlur = useRef(false);
-  const [adding, setAdding] = useState(false);
-  const [title, setTitle] = useState("");
-  const [details, setDetails] = useState("");
-  const { ref: dropRef, isDropTarget } = useDroppable({
-    id: `column-${column.id}`,
-    type: "column",
-    accept: "card",
-  });
-
-  function saveName(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    cancelRenameBlur.current = true;
-    commitName();
-  }
-
-  function commitName() {
-    const trimmedName = name.trim();
-    if (trimmedName) onRename(column.id, trimmedName);
-    setName(trimmedName || column.name);
-    setRenaming(false);
-  }
-
-  function saveCard(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!title.trim()) return;
-    onAdd(column.id, title, details);
-    setTitle("");
-    setDetails("");
-    setAdding(false);
-  }
-
-  return (
-    <section
-      ref={dropRef}
-      data-column={column.id}
-      className={`board-column${isDropTarget ? " is-drop-target" : ""}`}
-      aria-label={`${column.name} column`}
-    >
-      <header className="column-header">
-        <div className="column-heading">
-          {renaming ? (
-            <form className="rename-form" onSubmit={saveName}>
-              <label className="sr-only" htmlFor={`rename-${column.id}`}>
-                Column name
-              </label>
-              <input
-                id={`rename-${column.id}`}
-                autoFocus
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                onBlur={() => {
-                  if (cancelRenameBlur.current) {
-                    cancelRenameBlur.current = false;
-                    return;
-                  }
-                  commitName();
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") {
-                    cancelRenameBlur.current = true;
-                    setName(column.name);
-                    setRenaming(false);
-                  }
-                }}
-                onFocus={(event) => event.currentTarget.select()}
-              />
-            </form>
-          ) : (
-            <button
-              className="column-name"
-              type="button"
-              title="Rename column"
-              onClick={() => {
-                cancelRenameBlur.current = false;
-                setName(column.name);
-                setRenaming(true);
-              }}
-            >
-              {column.name}
-            </button>
-          )}
-          <span className="column-count">{column.cards.length}</span>
-        </div>
-        <button
-          className="icon-button add-card-icon"
-          type="button"
-          aria-label={`Add card to ${column.name}`}
-          onClick={() => setAdding((value) => !value)}
-        >
-          <Icon name="plus" />
-        </button>
-      </header>
-
-      <div className="column-cards" aria-label={`${column.name} cards`}>
-        {column.cards.map((card, index) => (
-          <CardItem
-            key={card.id}
-            card={card}
-            index={index}
-            columnId={column.id}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ))}
-        {column.cards.length === 0 && !adding && (
-          <p className="empty-column">
-            Nothing here yet. Add a card or drop one in.
-          </p>
-        )}
-        {adding && (
-          <form className="new-card-form" onSubmit={saveCard}>
-            <label className="sr-only" htmlFor={`new-title-${column.id}`}>
-              Card title
-            </label>
-            <input
-              id={`new-title-${column.id}`}
-              autoFocus
-              placeholder="What needs to get done?"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-            />
-            <label className="sr-only" htmlFor={`new-details-${column.id}`}>
-              Card details
-            </label>
-            <textarea
-              id={`new-details-${column.id}`}
-              placeholder="Add a few details…"
-              rows={3}
-              value={details}
-              onChange={(event) => setDetails(event.target.value)}
-            />
-            <div className="form-actions">
-              <button
-                className="button button-primary"
-                type="submit"
-                disabled={!title.trim()}
-              >
-                Add card
-              </button>
-              <button
-                className="button button-quiet"
-                type="button"
-                onClick={() => setAdding(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-
-      {!adding && (
-        <button
-          className="add-card-row"
-          type="button"
-          onClick={() => setAdding(true)}
-        >
-          <Icon name="plus" /> Add a card
-        </button>
-      )}
-    </section>
-  );
-}
-
-function EditDialog({
-  card,
-  columnId,
-  onSave,
-  onClose,
-}: {
-  card: BoardColumn["cards"][number];
-  columnId: string;
-  onSave: (
-    id: string,
-    columnId: string,
-    title: string,
-    details: string,
-  ) => void;
-  onClose: () => void;
-}) {
-  const [title, setTitle] = useState(card.title);
-  const [details, setDetails] = useState(card.details);
-  return (
-    <div
-      className="dialog-backdrop"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <section
-        className="edit-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="edit-title"
-      >
-        <div className="dialog-heading">
-          <div>
-            <span className="dialog-kicker">Card details</span>
-            <h2 id="edit-title">Edit card</h2>
-          </div>
-          <button
-            className="icon-button"
-            type="button"
-            aria-label="Close dialog"
-            onClick={onClose}
-          >
-            <Icon name="close" />
-          </button>
-        </div>
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (title.trim()) {
-              onSave(card.id, columnId, title, details);
-              onClose();
-            }
-          }}
-        >
-          <label htmlFor="edit-card-title">Title</label>
-          <input
-            id="edit-card-title"
-            autoFocus
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-          />
-          <label htmlFor="edit-card-details">Details</label>
-          <textarea
-            id="edit-card-details"
-            rows={5}
-            value={details}
-            onChange={(event) => setDetails(event.target.value)}
-          />
-          <div className="form-actions dialog-actions">
-            <button
-              className="button button-primary"
-              type="submit"
-              disabled={!title.trim()}
-            >
-              Save changes
-            </button>
-            <button
-              className="button button-quiet"
-              type="button"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
-  );
-}
+import type { BoardColumn, Card } from "@/services/board.service";
+import { BoardTopbar } from "@/components/board/board-topbar";
+import { BoardHeader } from "@/components/board/board-header";
+import { Column } from "@/components/board/column";
+import { EditCardDialog } from "@/components/board/edit-card-dialog";
+import { NewProjectModal } from "@/components/board/new-project-modal";
 
 export default function BoardView({ projectId }: { projectId: string }) {
   const user = useAuthStore((state) => state.user);
@@ -409,21 +37,16 @@ export default function BoardView({ projectId }: { projectId: string }) {
   const deleteCard = useBoardStore((state) => state.deleteCard);
   const moveCard = useBoardStore((state) => state.moveCard);
 
-  const [editingCard, setEditingCard] = useState<
-    BoardColumn["cards"][number] | null
-  >(null);
+  const [editingCard, setEditingCard] = useState<Card | null>(null);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
-  const [newProjectName, setNewProjectName] = useState("");
-  const [renamingProject, setRenamingProject] = useState(false);
-  const [projectNameInput, setProjectNameInput] = useState("");
 
   const boardBeforeDrag = useRef<BoardColumn[] | null>(null);
-  const totalCards = columns.reduce(
-    (total, column) => total + (column.cards ? column.cards.length : 0),
-    0,
-  );
-
   const lastLoadedBoardRef = useRef<string | null>(null);
+
+  const totalCards = columns.reduce(
+    (total, col) => total + (col.cards ? col.cards.length : 0),
+    0
+  );
 
   useEffect(() => {
     if (!projectId) return;
@@ -445,30 +68,29 @@ export default function BoardView({ projectId }: { projectId: string }) {
     logout();
   }
 
-  async function handleCreateProject(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newProjectName.trim()) return;
-    await createProject(newProjectName.trim());
-    setNewProjectName("");
-    setShowNewProjectModal(false);
+  async function handleCreateProject(name: string) {
+    await createProject(name);
   }
 
-  async function handleRenameProject(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = projectNameInput.trim();
-    if (trimmed && trimmed !== project?.name) {
-      await updateProject(trimmed);
-    }
-    setRenamingProject(false);
+  async function handleRenameProject(newName: string) {
+    await updateProject(newName);
   }
 
   async function handleDeleteProject() {
     if (
-      window.confirm(
-        "Are you sure you want to delete this project and all its cards?",
-      )
+      window.confirm("Are you sure you want to delete this project and all its cards?")
     ) {
       await deleteProject();
+    }
+  }
+
+  function handleSelectProject(selectedId: string) {
+    if (!selectedId || selectedId === project?.id) return;
+    const selected = projects.find((p) => p.id === selectedId);
+    if (selected) {
+      lastLoadedBoardRef.current = selected.id;
+      setProject(selected);
+      loadBoard(selected.id);
     }
   }
 
@@ -486,13 +108,13 @@ export default function BoardView({ projectId }: { projectId: string }) {
       ? target.index
       : Number.MAX_SAFE_INTEGER;
     boardBeforeDrag.current = columns;
-    const sourceColumn = columns.find((column) =>
-      column.cards.some((card) => card.id === String(source.id)),
+    const sourceColumn = columns.find((col) =>
+      col.cards.some((card) => card.id === String(source.id))
     );
-    const destination = columns.find((column) => column.id === targetColumn);
+    const destination = columns.find((col) => col.id === targetColumn);
     if (!sourceColumn || !destination) return;
     const sourceIndex = sourceColumn.cards.findIndex(
-      (card) => card.id === String(source.id),
+      (card) => card.id === String(source.id)
     );
     if (sourceColumn.id === targetColumn && sourceIndex === targetIndex) return;
     moveCard(String(source.id), targetColumn, targetIndex);
@@ -522,142 +144,53 @@ export default function BoardView({ projectId }: { projectId: string }) {
   }
 
   return (
-    <main className="app-shell">
-      <header className="topbar">
-        <a className="brand" href="#board" aria-label="Flowboard home">
-          <span className="brand-mark">
-            <i />
-            <i />
-            <i />
-          </span>
-          <span>flowboard</span>
-        </a>
-        <div className="topbar-right">
-          <div className="project-selector-wrapper">
-            <select
-              className="project-select"
-              value={project?.id || ""}
-              onChange={(e) => {
-                const nextId = e.target.value;
-                if (!nextId || nextId === project?.id) return;
-                const selected = projects.find((p) => p.id === nextId);
-                if (selected) {
-                  lastLoadedBoardRef.current = selected.id;
-                  setProject(selected);
-                  loadBoard(selected.id);
-                }
-              }}
-              aria-label="Select project"
-            >
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            <button
-              className="button button-quiet"
-              type="button"
-              onClick={() => setShowNewProjectModal(true)}
-              aria-label="New project"
-            >
-              + Project
-            </button>
-          </div>
-          <span className="avatar" aria-label="Your profile">
-            {user?.name ? user.name.slice(0, 1).toUpperCase() : "A"}
-          </span>
-          <button
-            className="button button-quiet"
-            type="button"
-            onClick={handleLogout}
-            aria-label="Log out"
-          >
-            Log out
-          </button>
-        </div>
-      </header>
+    <main className="app-shell min-h-screen bg-paper">
+      <BoardTopbar
+        projects={projects}
+        selectedProjectId={project?.id || ""}
+        userName={user?.name}
+        onSelectProject={handleSelectProject}
+        onNewProject={() => setShowNewProjectModal(true)}
+        onLogout={handleLogout}
+      />
 
       {isLoading && !project && (
-        <div className="auth-page">
-          <div className="auth-card">
-            <div className="auth-spinner" />
+        <div className="auth-page min-h-[60vh] flex items-center justify-center">
+          <div className="auth-card p-8 bg-white border border-line rounded-xl shadow-xs">
+            <div className="auth-spinner w-8 h-8 border-[3px] border-[#e1e7ec] border-t-blue rounded-full animate-spin mx-auto" />
           </div>
         </div>
       )}
 
       {!isLoading && (
-        <div className="page-content" id="board">
-          <section className="board-intro">
-            <div>
-              <p className="breadcrumb">
-                Projects <Icon name="arrow" />{" "}
-                <span>{project?.name || "Product studio"}</span>
-              </p>
-              <div className="board-title-row">
-                {renamingProject ? (
-                  <form onSubmit={handleRenameProject}>
-                    <input
-                      autoFocus
-                      className="rename-project-input"
-                      value={projectNameInput}
-                      onChange={(e) => setProjectNameInput(e.target.value)}
-                      onBlur={handleRenameProject}
-                    />
-                  </form>
-                ) : (
-                  <h1
-                    title="Click to rename project"
-                    onClick={() => {
-                      setProjectNameInput(project?.name || "");
-                      setRenamingProject(true);
-                    }}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {project?.name || "Product sprint"}
-                  </h1>
-                )}
-                <button
-                  className="button button-quiet"
-                  type="button"
-                  onClick={handleDeleteProject}
-                  aria-label="Delete project"
-                >
-                  Delete project
-                </button>
-                <span className="live-indicator">
-                  <i /> In motion
-                </span>
-              </div>
-              <p className="board-subtitle">
-                A clear view of what the team is shaping this week.
-              </p>
-            </div>
-            <div className="board-summary">
-              <span className="summary-number">{totalCards}</span>
-              <span className="summary-label">cards in play</span>
-              <span className="summary-rule" />
-            </div>
-          </section>
+        <div className="page-content max-w-[1680px] mx-auto pt-[51px] px-[5.3vw] pb-[27px]" id="board">
+          <BoardHeader
+            projectName={project?.name || "Product sprint"}
+            totalCards={totalCards}
+            onRenameProject={handleRenameProject}
+            onDeleteProject={handleDeleteProject}
+          />
 
           {error && (
-            <div className="auth-error" role="alert">
+            <div className="auth-error mb-4 p-3 rounded-md bg-[#fff0ef] text-[#c45c53] text-sm" role="alert">
               {error}
             </div>
           )}
 
           <section
-            className="board-wrap"
+            className="board-wrap overflow-hidden border border-[#e5eaf0] rounded-xl bg-white shadow-xs"
             aria-label={`${project?.name || "Product sprint"} board`}
           >
-            <div className="board-toolbar">
-              <div className="toolbar-title">
-                <span className="toolbar-indicator" /> Sprint board{" "}
-                <span className="toolbar-divider">/</span>{" "}
-                <span className="toolbar-muted">Week 24</span>
+            <div className="board-toolbar min-h-[50px] flex items-center justify-between gap-3 px-5 border-b border-[#eef1f4]">
+              <div className="toolbar-title flex items-center gap-2 text-xs font-semibold text-[#394f64]">
+                <span className="toolbar-indicator w-2 h-2 border-[1.5px] border-blue rounded-xs rotate-45" />{" "}
+                Sprint board{" "}
+                <span className="toolbar-divider text-gray-300">/</span>{" "}
+                <span className="toolbar-muted text-gray-500 font-normal">Week 24</span>
               </div>
-              <p>Drag cards to move work forward</p>
+              <p className="text-gray-500 text-[11px] m-0">Drag cards to move work forward</p>
             </div>
+
             <DragDropProvider
               sensors={[
                 {
@@ -672,11 +205,12 @@ export default function BoardView({ projectId }: { projectId: string }) {
               onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
             >
-              <div className="board-columns">
-                {columns.map((column) => (
+              <div className="board-columns grid grid-cols-5 min-w-[1050px] overflow-x-auto">
+                {columns.map((column, index) => (
                   <Column
                     key={column.id}
                     column={column}
+                    columnIndex={index}
                     onRename={(id, name) => renameColumn(id, name)}
                     onAdd={(columnId, title, details) =>
                       addCard(columnId, title, details)
@@ -688,14 +222,15 @@ export default function BoardView({ projectId }: { projectId: string }) {
               </div>
             </DragDropProvider>
           </section>
-          <footer className="page-footer">
+
+          <footer className="page-footer flex justify-between gap-3 pt-4 text-support text-[11px]">
             <span>Small steps, clear progress.</span>
           </footer>
         </div>
       )}
 
       {editingCard && (
-        <EditDialog
+        <EditCardDialog
           key={editingCard.id}
           card={editingCard}
           columnId={columnIdFromCard(editingCard.id) || ""}
@@ -706,63 +241,11 @@ export default function BoardView({ projectId }: { projectId: string }) {
         />
       )}
 
-      {showNewProjectModal && (
-        <div
-          className="dialog-backdrop"
-          role="presentation"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setShowNewProjectModal(false);
-          }}
-        >
-          <section
-            className="edit-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="new-project-dialog-title"
-          >
-            <div className="dialog-heading">
-              <div>
-                <span className="dialog-kicker">Workspace</span>
-                <h2 id="new-project-dialog-title">Create new project</h2>
-              </div>
-              <button
-                className="icon-button"
-                type="button"
-                aria-label="Close dialog"
-                onClick={() => setShowNewProjectModal(false)}
-              >
-                <Icon name="close" />
-              </button>
-            </div>
-            <form onSubmit={handleCreateProject}>
-              <label htmlFor="new-project-name-input">Project name</label>
-              <input
-                id="new-project-name-input"
-                autoFocus
-                placeholder="e.g. Mobile App Redesign"
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
-              />
-              <div className="form-actions dialog-actions">
-                <button
-                  className="button button-primary"
-                  type="submit"
-                  disabled={!newProjectName.trim()}
-                >
-                  Create project
-                </button>
-                <button
-                  className="button button-quiet"
-                  type="button"
-                  onClick={() => setShowNewProjectModal(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </section>
-        </div>
-      )}
+      <NewProjectModal
+        isOpen={showNewProjectModal}
+        onClose={() => setShowNewProjectModal(false)}
+        onCreate={handleCreateProject}
+      />
     </main>
   );
 }
