@@ -19,8 +19,15 @@ vi.mock("../services/ProjectService", () => ({
   },
 }));
 
+vi.mock("../services/BoardService", () => ({
+  boardService: {
+    getBoard: vi.fn(),
+  },
+}));
+
 import { Request, Response, NextFunction } from "express";
 import { projectService } from "../services/ProjectService";
+import { boardService } from "../services/BoardService";
 import { projectController } from "./ProjectController";
 
 describe("ProjectController", () => {
@@ -143,6 +150,40 @@ describe("ProjectController", () => {
     vi.mocked(projectService.deleteProject).mockResolvedValue(false);
 
     await projectController.delete(
+      mockReq as Request,
+      mockRes as Response,
+      next
+    );
+
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 404 })
+    );
+  });
+
+  it("getBoard returns 200 with board data", async () => {
+    mockReq.params = { id: "p1" };
+    vi.mocked(boardService.getBoard).mockResolvedValue({
+      project: { _id: "p1", name: "Project 1" },
+      columns: [{ _id: "c1", name: "Backlog", cards: [] }],
+    } as any);
+
+    await projectController.getBoard(
+      mockReq as Request,
+      mockRes as Response,
+      next
+    );
+
+    expect(mockRes.json).toHaveBeenCalledWith({
+      project: { _id: "p1", name: "Project 1" },
+      columns: [{ _id: "c1", name: "Backlog", cards: [] }],
+    });
+  });
+
+  it("getBoard returns 404 when project not found", async () => {
+    mockReq.params = { id: "p1" };
+    vi.mocked(boardService.getBoard).mockResolvedValue(null);
+
+    await projectController.getBoard(
       mockReq as Request,
       mockRes as Response,
       next

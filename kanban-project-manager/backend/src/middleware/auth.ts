@@ -6,12 +6,23 @@ export interface AuthenticatedRequest extends Request {
   user?: { userId: string };
 }
 
+function extractToken(req: Request): string | undefined {
+  if (req.cookies?.token) {
+    return req.cookies.token;
+  }
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    return authHeader.substring(7);
+  }
+  return undefined;
+}
+
 export function authMiddleware(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): void {
-  const token = req.cookies?.token;
+  const token = extractToken(req);
   if (!token) {
     res.status(401).json({ error: "Unauthorized" });
     return;
@@ -28,10 +39,10 @@ export function authMiddleware(
 
 export function optionalAuthMiddleware(
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void {
-  const token = req.cookies?.token;
+  const token = extractToken(req);
   if (!token) {
     next();
     return;

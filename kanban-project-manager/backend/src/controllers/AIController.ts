@@ -1,17 +1,18 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { boardService } from "../services/BoardService";
 import { aiService } from "../services/AIService";
 import { Project } from "../models/Project";
 import { Types } from "mongoose";
+import { AuthenticatedRequest } from "../middleware/auth";
 
 export class AIController {
   board = async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = req.user?.userId || "";
       const { message, history, projectId } = req.body;
 
       if (!message) {
@@ -46,7 +47,7 @@ export class AIController {
         history || [],
         {
           projects: [board.project],
-          columns: board.columns,
+          columns: board.rawColumns,
           cards: board.cards,
         }
       );

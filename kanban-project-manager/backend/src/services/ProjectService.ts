@@ -1,6 +1,15 @@
 import { Project, type IProject } from "../models/Project";
-import { AppError } from "../middleware/error";
+import { BoardColumn } from "../models/BoardColumn";
+import { Card } from "../models/Card";
 import { Types } from "mongoose";
+
+export const DEFAULT_COLUMNS = [
+  "Backlog",
+  "To do",
+  "In progress",
+  "Review",
+  "Done",
+];
 
 export class ProjectService {
   async listProjects(userId: string): Promise<IProject[]> {
@@ -13,10 +22,19 @@ export class ProjectService {
     userId: string,
     name: string
   ): Promise<IProject> {
-    return Project.create({
+    const project = await Project.create({
       name,
       userId: new Types.ObjectId(userId),
     });
+
+    const columns = DEFAULT_COLUMNS.map((colName, index) => ({
+      name: colName,
+      projectId: project._id,
+      position: index,
+    }));
+    await BoardColumn.insertMany(columns);
+
+    return project;
   }
 
   async updateProject(
@@ -33,6 +51,18 @@ export class ProjectService {
   }
 
   async deleteProject(userId: string, projectId: string): Promise<boolean> {
+    const project = await Project.findOne({
+      _id: new Types.ObjectId(projectId),
+      userId: new Types.ObjectId(userId),
+    });
+    if (!project) return false;
+
+    const columns = await BoardColumn.find({
+      projectId: new Types.ObjectId(projectId),
+    });
+    const columnIds = columns.map((col) => col._id);
+    await Card.deleteMany({ columnId: { $in: columnIds } });
+    await BoardColumn.deleteMany({ projectId: new Types.ObjectId(projectId) });
     const result = await Project.deleteOne({
       _id: new Types.ObjectId(projectId),
       userId: new Types.ObjectId(userId),

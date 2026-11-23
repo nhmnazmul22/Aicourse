@@ -21,6 +21,18 @@ vi.mock("mongoose", async (importOriginal) => {
   };
 });
 
+vi.mock("../models/Project", () => ({
+  Project: {
+    findOne: vi.fn(),
+  },
+}));
+
+vi.mock("../models/Card", () => ({
+  Card: {
+    deleteMany: vi.fn(),
+  },
+}));
+
 vi.mock("../models/BoardColumn", () => ({
   BoardColumn: {
     find: vi.fn(),
@@ -33,14 +45,24 @@ vi.mock("../models/BoardColumn", () => ({
 
 import { columnService } from "./ColumnService";
 import { BoardColumn } from "../models/BoardColumn";
+import { Project } from "../models/Project";
 
 describe("ColumnService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(Project.findOne).mockResolvedValue({ _id: "p1", userId: "user-123" } as any);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("throws 404 when project does not belong to user", async () => {
+    vi.mocked(Project.findOne).mockResolvedValue(null);
+
+    await expect(columnService.listColumns("user-123", "p1")).rejects.toThrow(
+      "Project not found"
+    );
   });
 
   it("listColumns returns columns sorted by position", async () => {

@@ -103,6 +103,9 @@ describe("AuthService", () => {
     expect(result.token).toBe("mock-token");
     expect((result as any).user.passwordHash).toBeUndefined();
     expect(result.user.email).toBe("test@example.com");
+    expect(result.user.id).toBe("user-123");
+    expect((result.user as any)._id).toBeUndefined();
+    expect((result.user as any).__v).toBeUndefined();
   });
 
   it("signup rejects duplicate email", async () => {
@@ -128,6 +131,9 @@ describe("AuthService", () => {
 
     expect(result.token).toBe("mock-token");
     expect(result.user.email).toBe("test@example.com");
+    expect(result.user.id).toBe("user-123");
+    expect((result.user as any)._id).toBeUndefined();
+    expect((result.user as any).__v).toBeUndefined();
   });
 
   it("login rejects wrong password", async () => {
@@ -161,6 +167,9 @@ describe("AuthService", () => {
     expect(result).toBeDefined();
     expect((result as any)?.passwordHash).toBeUndefined();
     expect(result?.email).toBe("test@example.com");
+    expect(result?.id).toBe("user-123");
+    expect((result as any)?._id).toBeUndefined();
+    expect((result as any)?.__v).toBeUndefined();
   });
 
   it("getUserById returns null for missing user", async () => {

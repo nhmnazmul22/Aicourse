@@ -12,7 +12,31 @@ const projectSchema = new Schema<IProject>(
     name: { type: String, required: true, trim: true, maxlength: 100 },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret: Record<string, unknown>) => {
+        if (ret._id) {
+          ret.id = (ret._id as { toString(): string }).toString();
+          delete ret._id;
+        }
+        delete ret.__v;
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: (_doc, ret: Record<string, unknown>) => {
+        if (ret._id) {
+          ret.id = (ret._id as { toString(): string }).toString();
+          delete ret._id;
+        }
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 
 projectSchema.index({ userId: 1, name: 1 }, { unique: true });

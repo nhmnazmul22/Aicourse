@@ -18,7 +18,31 @@ const userSchema = new Schema<IUser>(
     passwordHash: { type: String, required: true },
     avatarUrl: { type: String },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret: Record<string, unknown>) => {
+        if (ret._id) {
+          ret.id = (ret._id as { toString(): string }).toString();
+          delete ret._id;
+        }
+        delete ret.__v;
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: (_doc, ret: Record<string, unknown>) => {
+        if (ret._id) {
+          ret.id = (ret._id as { toString(): string }).toString();
+          delete ret._id;
+        }
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 
 export const User = model<IUser>("User", userSchema);

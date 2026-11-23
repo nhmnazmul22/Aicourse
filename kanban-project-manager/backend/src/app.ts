@@ -43,6 +43,8 @@ export function createApp() {
   app.use('/api/ai', authMiddleware, aiRoutes);
   app.use('/api/ai', authMiddleware, aiTestRoutes);
 
+  app.all('/api/*', notFoundHandler);
+
   const frontendOut = path.join(__dirname, 'frontend/out');
   const fallbackOut = path.join(__dirname, '../../frontend/out');
   const outDir = fs.existsSync(frontendOut) ? frontendOut : fallbackOut;

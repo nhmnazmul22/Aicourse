@@ -24,13 +24,22 @@ export function errorMiddleware(
   if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
+  } else if ("statusCode" in err && typeof (err as { statusCode?: unknown }).statusCode === "number") {
+    statusCode = (err as { statusCode: number }).statusCode;
+    message = err.message;
   } else if (err.name === "ValidationError") {
     statusCode = 400;
     message = err.message;
   } else if (err.name === "CastError") {
     statusCode = 400;
     message = "Invalid resource ID";
-  } else if ((err as any).code === 11000 || (err as any).name === "MongoServerError") {
+  } else if (
+    (typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: unknown }).code === 11000) ||
+    err.name === "MongoServerError"
+  ) {
     statusCode = 409;
     message = "Duplicate field value";
   }

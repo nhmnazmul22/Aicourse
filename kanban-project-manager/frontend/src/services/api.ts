@@ -15,10 +15,28 @@ class ApiClient {
     init: RequestInit = {}
   ): Promise<T> {
     const url = this.baseUrl + input;
-    const headers: HeadersInit = {
+
+    let token = "";
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("auth-storage");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          token = parsed?.state?.token || "";
+        }
+      } catch {
+        // ignore storage parse error
+      }
+    }
+
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      ...init.headers,
+      ...((init.headers as Record<string, string>) || {}),
     };
+
+    if (token && !headers["Authorization"]) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
 
     const response = await fetch(url, { ...init, headers, credentials: "include" });
 

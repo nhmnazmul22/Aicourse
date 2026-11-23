@@ -10,8 +10,10 @@ type AIUpdate = {
 };
 
 type AIBoardResponse = {
-  response: string;
+  response?: string;
+  text?: string;
   updates?: AIUpdate[];
+  actions?: unknown[];
 };
 
 export function AIChatSidebar() {
@@ -37,8 +39,9 @@ export function AIChatSidebar() {
         projectId,
       })
       .then((data) => {
-        setMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
-        if (data.updates && data.updates.length > 0) {
+        const reply = data.response || data.text || "AI updated the board.";
+        setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+        if ((data.updates && data.updates.length > 0) || (data.actions && data.actions.length > 0)) {
           loadBoard(projectId);
         }
         setLoading(false);
@@ -61,7 +64,7 @@ export function AIChatSidebar() {
         />
       )}
       <button
-        className="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center mb-6 hover:bg-purple-700 transition-colors"
+        className="relative z-50 w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center mb-6 hover:bg-purple-700 transition-colors"
         onClick={() => setOpen((o) => !o)}
         aria-label="Toggle AI assistant"
       >
@@ -72,7 +75,7 @@ export function AIChatSidebar() {
       </button>
 
       {open && (
-        <div className="w-full h-full flex flex-col bg-white border-l border-gray-200 shadow-lg">
+        <div className="relative z-50 w-full h-full flex flex-col bg-white border-l border-gray-200 shadow-lg">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h2 className="text-navy-dark text-sm font-semibold">AI Assistant</h2>
             <button

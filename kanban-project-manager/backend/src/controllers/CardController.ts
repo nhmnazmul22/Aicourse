@@ -1,14 +1,15 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { cardService } from "../services/CardService";
+import { AuthenticatedRequest } from "../middleware/auth";
 
 export class CardController {
   list = async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = req.user?.userId || "";
       const { id: projectId, columnId } = req.params;
       const cards = await cardService.listCards(userId, projectId, columnId);
       res.json({ cards });
@@ -18,12 +19,12 @@ export class CardController {
   };
 
   create = async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = req.user?.userId || "";
       const { id: projectId, columnId } = req.params;
       const { title, details } = req.body;
       if (!title) {
@@ -45,12 +46,12 @@ export class CardController {
   };
 
   update = async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = req.user?.userId || "";
       const { id: projectId, columnId, cardId } = req.params;
       const { title, details } = req.body;
       const card = await cardService.updateCard(
@@ -73,12 +74,12 @@ export class CardController {
   };
 
   delete = async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = req.user?.userId || "";
       const { id: projectId, columnId, cardId } = req.params;
       const deleted = await cardService.deleteCard(
         userId,

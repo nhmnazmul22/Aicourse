@@ -6,6 +6,7 @@ const router = Router();
 
 router.get("/", projectController.list);
 router.post("/", projectController.create);
+router.get("/:id/board", projectController.getBoard);
 router.put("/:id", projectController.update);
 router.delete("/:id", projectController.delete);
 

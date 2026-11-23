@@ -12,11 +12,13 @@ vi.mock("../config/env", () => ({
 
 vi.mock("mongoose", async (importOriginal) => {
   const actual = await importOriginal<typeof import("mongoose")>();
+  const MockObjectId = vi.fn((id: string) => ({ toString: () => id }));
+  (MockObjectId as any).isValid = vi.fn(() => true);
   return {
     ...actual,
     Types: {
       ...actual.Types,
-      ObjectId: vi.fn((id: string) => ({ toString: () => id })),
+      ObjectId: MockObjectId,
     },
   };
 });
@@ -62,7 +64,7 @@ describe("BoardService", () => {
   it("getBoard returns project with columns and cards", async () => {
     const mockProject = { _id: "p1", name: "Project 1" };
     const mockColumns = [{ _id: "c1", name: "Backlog", position: 0 }];
-    const mockCards = [{ _id: "card1", title: "Card 1" }];
+    const mockCards = [{ _id: "card1", title: "Card 1", columnId: "c1" }];
 
     vi.spyOn(Project, "findOne").mockResolvedValue(mockProject as any);
     vi.spyOn(BoardColumn, "find").mockReturnValue({
@@ -75,7 +77,9 @@ describe("BoardService", () => {
     const result = await boardService.getBoard("user-123", "p1");
 
     expect(result?.project).toEqual(mockProject);
-    expect(result?.columns).toEqual(mockColumns);
+    expect(result?.columns).toEqual([
+      { ...mockColumns[0], cards: [mockCards[0]] },
+    ]);
     expect(result?.cards).toEqual(mockCards);
   });
 });

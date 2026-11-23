@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc && npm run copy:frontend",
-    "copy:frontend": "mkdir -p dist/frontend && cp -r ../frontend/out dist/frontend/out 2>/dev/null || true",
+    "copy:frontend": "node -e \"const fs = require('fs'); if (fs.existsSync('../frontend/out')) { fs.rmSync('dist/frontend/out', { recursive: true, force: true }); fs.mkdirSync('dist/frontend', { recursive: true }); fs.cpSync('../frontend/out', 'dist/frontend/out', { recursive: true }); }\"",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "test": "vitest run"

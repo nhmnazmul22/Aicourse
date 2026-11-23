@@ -1,13 +1,27 @@
 import { BoardColumn, type IBoardColumn } from "../models/BoardColumn";
+import { Project } from "../models/Project";
+import { Card } from "../models/Card";
 import { AppError } from "../middleware/error";
 import { Types } from "mongoose";
 
 export class ColumnService {
+  private async ensureProjectOwnership(userId: string, projectId: string): Promise<void> {
+    const project = await Project.findOne({
+      _id: new Types.ObjectId(projectId),
+      userId: new Types.ObjectId(userId),
+    });
+    if (!project) {
+      throw new AppError("Project not found", 404);
+    }
+  }
+
   async createColumn(
     userId: string,
     projectId: string,
     name: string
   ): Promise<IBoardColumn> {
+    await this.ensureProjectOwnership(userId, projectId);
+
     const lastColumn = await BoardColumn.findOne(
       { projectId: new Types.ObjectId(projectId) },
       null,
@@ -26,6 +40,8 @@ export class ColumnService {
     userId: string,
     projectId: string
   ): Promise<IBoardColumn[]> {
+    await this.ensureProjectOwnership(userId, projectId);
+
     return BoardColumn.find({
       projectId: new Types.ObjectId(projectId),
     }).sort({ position: 1 });
@@ -37,6 +53,8 @@ export class ColumnService {
     columnId: string,
     name: string
   ): Promise<IBoardColumn | null> {
+    await this.ensureProjectOwnership(userId, projectId);
+
     return BoardColumn.findOneAndUpdate(
       {
         _id: new Types.ObjectId(columnId),
@@ -52,6 +70,9 @@ export class ColumnService {
     projectId: string,
     columnId: string
   ): Promise<boolean> {
+    await this.ensureProjectOwnership(userId, projectId);
+
+    await Card.deleteMany({ columnId: new Types.ObjectId(columnId) });
     const result = await BoardColumn.deleteOne({
       _id: new Types.ObjectId(columnId),
       projectId: new Types.ObjectId(projectId),

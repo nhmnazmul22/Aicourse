@@ -7,6 +7,6 @@ if [ -f .env ]; then
   set +a
 fi
 
-docker compose up -d
+docker compose up -d --build
 
 echo "Backend starting on http://localhost:${PORT:-3001}"

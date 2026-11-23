@@ -1,14 +1,15 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { columnService } from "../services/ColumnService";
+import { AuthenticatedRequest } from "../middleware/auth";
 
 export class ColumnController {
   create = async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = req.user?.userId || "";
       const { id: projectId } = req.params;
       const { name } = req.body;
       if (!name) {
@@ -24,12 +25,12 @@ export class ColumnController {
   };
 
   list = async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = req.user?.userId || "";
       const { id: projectId } = req.params;
       const columns = await columnService.listColumns(userId, projectId);
       res.json({ columns });
@@ -39,12 +40,12 @@ export class ColumnController {
   };
 
   update = async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = req.user?.userId || "";
       const { id: projectId, columnId } = req.params;
       const { name } = req.body;
       const column = await columnService.updateColumn(
@@ -65,12 +66,12 @@ export class ColumnController {
   };
 
   delete = async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = req.user?.userId || "";
       const { id: projectId, columnId } = req.params;
       const deleted = await columnService.deleteColumn(
         userId,

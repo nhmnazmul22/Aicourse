@@ -56,6 +56,7 @@ describe("AuthController", () => {
     );
     expect(mockRes.json).toHaveBeenCalledWith({
       user: { id: "1", email: "test@example.com", name: "Test" },
+      token: "mock-token",
     });
   });
 

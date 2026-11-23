@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { authService, type User } from "@/services/auth.service";
+import { authService, normalizeUser, type User } from "@/services/auth.service";
 
 type AuthState = {
   user: User | null;
@@ -26,7 +26,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isLoading: false,
 
-      setAuth: (user, token) => set({ user, token }),
+      setAuth: (user, token) => set({ user: normalizeUser(user), token }),
 
       logout: () => set({ user: null, token: null }),
 
@@ -34,7 +34,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const { user, token } = await authService.login({ email, password });
-          set({ user, token, isLoading: false });
+          set({ user: normalizeUser(user), token, isLoading: false });
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -45,7 +45,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const { user, token } = await authService.signup(input);
-          set({ user, token, isLoading: false });
+          set({ user: normalizeUser(user), token, isLoading: false });
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -56,7 +56,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const user = await authService.me();
-          set({ user, isLoading: false });
+          set({ user: normalizeUser(user), isLoading: false });
         } catch (error) {
           set({ user: null, token: null, isLoading: false });
           throw error;
@@ -67,6 +67,11 @@ export const useAuthStore = create<AuthState>()(
       name: "auth-storage",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ user: state.user, token: state.token }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.user) {
+          state.user = normalizeUser(state.user);
+        }
+      },
     }
   )
 );

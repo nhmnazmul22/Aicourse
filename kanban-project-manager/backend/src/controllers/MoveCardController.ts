@@ -1,14 +1,15 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { cardService } from "../services/CardService";
+import { AuthenticatedRequest } from "../middleware/auth";
 
 export class MoveCardController {
   move = async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = req.user?.userId || "";
       const { id: projectId, cardId } = req.params;
       const { targetColumnId, targetIndex } = req.body;
       if (!targetColumnId || targetIndex === undefined) {

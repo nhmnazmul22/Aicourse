@@ -31,8 +31,24 @@ vi.mock("../models/Project", () => ({
   },
 }));
 
+vi.mock("../models/BoardColumn", () => ({
+  BoardColumn: {
+    insertMany: vi.fn(),
+    find: vi.fn(),
+    deleteMany: vi.fn(),
+  },
+}));
+
+vi.mock("../models/Card", () => ({
+  Card: {
+    deleteMany: vi.fn(),
+  },
+}));
+
 import { projectService } from "./ProjectService";
 import { Project } from "../models/Project";
+import { BoardColumn } from "../models/BoardColumn";
+import { Card } from "../models/Card";
 
 describe("ProjectService", () => {
   beforeEach(() => {
@@ -57,9 +73,10 @@ describe("ProjectService", () => {
     expect(result).toEqual(mockProjects);
   });
 
-  it("createProject creates and returns project", async () => {
+  it("createProject creates project and initializes 5 default columns", async () => {
     const mockProject = { _id: "p1", name: "New Project", userId: "user-123" };
     vi.spyOn(Project, "create").mockResolvedValue(mockProject as any);
+    vi.spyOn(BoardColumn, "insertMany").mockResolvedValue([] as any);
 
     const result = await projectService.createProject("user-123", "New Project");
 
@@ -67,6 +84,15 @@ describe("ProjectService", () => {
       name: "New Project",
       userId: expect.anything(),
     });
+    expect(BoardColumn.insertMany).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "Backlog", position: 0 }),
+        expect.objectContaining({ name: "To do", position: 1 }),
+        expect.objectContaining({ name: "In progress", position: 2 }),
+        expect.objectContaining({ name: "Review", position: 3 }),
+        expect.objectContaining({ name: "Done", position: 4 }),
+      ])
+    );
     expect(result).toEqual(mockProject);
   });
 
@@ -83,16 +109,23 @@ describe("ProjectService", () => {
     expect(result).toEqual(mockProject);
   });
 
-  it("deleteProject returns true when deleted", async () => {
+  it("deleteProject returns true when deleted and cascades to columns and cards", async () => {
+    vi.spyOn(Project, "findOne").mockResolvedValue({ _id: "p1" } as any);
+    vi.spyOn(BoardColumn, "find").mockResolvedValue([{ _id: "col-1" }] as any);
+    vi.spyOn(Card, "deleteMany").mockResolvedValue({} as any);
+    vi.spyOn(BoardColumn, "deleteMany").mockResolvedValue({} as any);
     vi.spyOn(Project, "deleteOne").mockResolvedValue({ deletedCount: 1 } as any);
 
     const result = await projectService.deleteProject("user-123", "p1");
 
+    expect(Card.deleteMany).toHaveBeenCalled();
+    expect(BoardColumn.deleteMany).toHaveBeenCalled();
+    expect(Project.deleteOne).toHaveBeenCalled();
     expect(result).toBe(true);
   });
 
   it("deleteProject returns false when not found", async () => {
-    vi.spyOn(Project, "deleteOne").mockResolvedValue({ deletedCount: 0 } as any);
+    vi.spyOn(Project, "findOne").mockResolvedValue(null);
 
     const result = await projectService.deleteProject("user-123", "p1");
 

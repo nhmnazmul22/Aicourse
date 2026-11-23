@@ -16,7 +16,31 @@ const cardSchema = new Schema<ICard>(
     columnId: { type: Schema.Types.ObjectId, ref: "BoardColumn", required: true, index: true },
     position: { type: Number, required: true, default: 0 },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret: Record<string, unknown>) => {
+        if (ret._id) {
+          ret.id = (ret._id as { toString(): string }).toString();
+          delete ret._id;
+        }
+        delete ret.__v;
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: (_doc, ret: Record<string, unknown>) => {
+        if (ret._id) {
+          ret.id = (ret._id as { toString(): string }).toString();
+          delete ret._id;
+        }
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 
 cardSchema.index({ columnId: 1, position: 1 });

@@ -4,12 +4,16 @@ import type { Project, BoardColumn, Card } from "@/services/board.service";
 
 interface BoardState {
   project: Project | null;
+  projects: Project[];
   columns: BoardColumn[];
   isLoading: boolean;
   error: string | null;
   setProject: (project: Project) => void;
+  loadProjects: () => Promise<void>;
   loadBoard: (projectId: string) => Promise<void>;
   createProject: (name: string) => Promise<void>;
+  updateProject: (name: string) => Promise<void>;
+  deleteProject: () => Promise<void>;
   renameColumn: (columnId: string, name: string) => Promise<void>;
   addCard: (columnId: string, title: string, details: string) => Promise<void>;
   updateCard: (cardId: string, columnId: string, title: string, details: string) => Promise<void>;
@@ -19,21 +23,36 @@ interface BoardState {
 
 export const useBoardStore = create<BoardState>((set, get) => ({
   project: null,
+  projects: [],
   columns: [],
   isLoading: false,
   error: null,
 
   setProject: (project) => set({ project }),
 
+  loadProjects: async () => {
+    try {
+      const projects = await boardService.listProjects();
+      set({ projects });
+    } catch {
+      // handled gracefully
+    }
+  },
+
   loadBoard: async (projectId) => {
     set({ isLoading: true, error: null });
     try {
-      const [columns] = await Promise.all([
-        boardService.listColumns(projectId),
-      ]);
-      set({ columns, isLoading: false });
+      const data = await boardService.getBoard(projectId);
+      set({
+        project: data.project,
+        columns: data.columns || [],
+        isLoading: false,
+      });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : "Failed to load board", isLoading: false });
+      set({
+        error: error instanceof Error ? error.message : "Failed to load board",
+        isLoading: false,
+      });
     }
   },
 
@@ -42,8 +61,54 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     try {
       const project = await boardService.createProject(name);
       set({ project, isLoading: false });
+      if (project?.id) {
+        await get().loadBoard(project.id);
+      }
+      await get().loadProjects();
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : "Failed to create project", isLoading: false });
+      set({
+        error: error instanceof Error ? error.message : "Failed to create project",
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  updateProject: async (name) => {
+    const current = get().project;
+    if (!current) return;
+    try {
+      const updated = await boardService.updateProject(current.id, name);
+      set({ project: updated });
+      await get().loadProjects();
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : "Failed to update project",
+      });
+      throw error;
+    }
+  },
+
+  deleteProject: async () => {
+    const current = get().project;
+    if (!current) return;
+    try {
+      await boardService.deleteProject(current.id);
+      const remaining = await boardService.listProjects();
+      set({ projects: remaining });
+      if (remaining.length > 0) {
+        set({ project: remaining[0] });
+        await get().loadBoard(remaining[0].id);
+      } else {
+        const newProj = await boardService.createProject("My Project");
+        set({ project: newProj });
+        await get().loadBoard(newProj.id);
+        await get().loadProjects();
+      }
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : "Failed to delete project",
+      });
       throw error;
     }
   },
@@ -61,10 +126,25 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   addCard: async (columnId, title, details) => {
     const previous = get().columns;
-    const newCard: Card = { id: crypto.randomUUID(), title, details, columnId, position: 0 };
+    const tempId = crypto.randomUUID();
+    const newCard: Card = { id: tempId, title, details, columnId, position: 0 };
     set({ columns: previous.map((c) => c.id === columnId ? { ...c, cards: [...c.cards, newCard] } : c) });
     try {
-      await boardService.createCard(get().project?.id || "", columnId, title, details);
+      const createdCard = await boardService.createCard(get().project?.id || "", columnId, title, details);
+      if (createdCard && createdCard.id) {
+        set({
+          columns: get().columns.map((c) =>
+            c.id === columnId
+              ? {
+                  ...c,
+                  cards: c.cards.map((card) =>
+                    card.id === tempId ? createdCard : card
+                  ),
+                }
+              : c
+          ),
+        });
+      }
     } catch (error) {
       set({ columns: previous, error: error instanceof Error ? error.message : "Failed to add card" });
       throw error;

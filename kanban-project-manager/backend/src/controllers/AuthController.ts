@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { authService } from "../services/AuthService";
+import { AuthenticatedRequest } from "../middleware/auth";
 
 export class AuthController {
   signup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -12,7 +13,7 @@ export class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: "/",
       });
-      res.status(201).json({ user });
+      res.status(201).json({ user, token });
     } catch (error) {
       next(error);
     }
@@ -28,7 +29,7 @@ export class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: "/",
       });
-      res.status(200).json({ user });
+      res.status(200).json({ user, token });
     } catch (error) {
       next(error);
     }
@@ -39,9 +40,9 @@ export class AuthController {
     res.status(200).json({ ok: true });
   };
 
-  me = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  me = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = (req as Request & { user?: { userId: string } }).user?.userId;
+      const userId = req.user?.userId;
       if (!userId) {
         const err = new Error("Unauthorized") as Error & { statusCode?: number };
         err.statusCode = 401;
