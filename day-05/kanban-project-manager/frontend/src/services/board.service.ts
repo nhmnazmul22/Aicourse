@@ -29,8 +29,14 @@ export type MoveCardInput = {
 };
 
 export const boardService = {
-  listProjects: () => api.get<Project[]>("/api/projects"),
-  createProject: (name: string) => api.post<Project>("/api/projects", { name }),
+  listProjects: async () => {
+    const { projects } = await api.get<{ projects: Project[] }>("/api/projects");
+    return projects;
+  },
+  createProject: async (name: string) => {
+    const { project } = await api.post<{ project: Project }>("/api/projects", { name });
+    return project;
+  },
   updateProject: (id: string, name: string) =>
     api.put<Project>(`/api/projects/${id}`, { name }),
   deleteProject: (id: string) => api.delete<{ ok: boolean }>(`/api/projects/${id}`),

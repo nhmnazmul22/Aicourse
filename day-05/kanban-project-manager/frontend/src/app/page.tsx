@@ -6,6 +6,7 @@ import { useBoardStore } from "@/lib/board-store";
 import { boardService } from "@/services/board.service";
 import BoardView from "./board";
 import LoginPage from "./login/page";
+import { AIChatSidebar } from "@/components/ai/ai-chat-sidebar";
 
 export default function Home() {
   const user = useAuthStore((state) => state.user);
@@ -13,15 +14,16 @@ export default function Home() {
   const isLoading = useAuthStore((state) => state.isLoading);
   const fetchMe = useAuthStore((state) => state.fetchMe);
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [projectLoaded, setProjectLoaded] = useState(false);
 
   useEffect(() => {
-    if (token) {
+    if (!user) {
       fetchMe();
     }
-  }, [token, fetchMe]);
+  }, [user, fetchMe]);
 
   useEffect(() => {
-    if (!user || !token) return;
+    if (!user) return;
 
     async function loadProject() {
       try {
@@ -36,13 +38,16 @@ export default function Home() {
         }
       } catch {
         // Project loading error handled by store
+      } finally {
+        setProjectLoaded(true);
       }
     }
 
     loadProject();
-  }, [user, token]);
+  }, [user]);
 
-  if (isLoading && !user) {
+  // Only show spinner when actively authenticating (token exists but user not yet resolved)
+  if (token && isLoading && !user) {
     return (
       <div className="auth-page">
         <div className="auth-card">
@@ -52,11 +57,13 @@ export default function Home() {
     );
   }
 
+  // Not authenticated — show login immediately, no spinner
   if (!user) {
     return <LoginPage />;
   }
 
-  if (!projectId) {
+  // Authenticated but project still loading
+  if (!projectLoaded) {
     return (
       <div className="auth-page">
         <div className="auth-card">
@@ -66,5 +73,10 @@ export default function Home() {
     );
   }
 
-  return <BoardView projectId={projectId} />;
+  return (
+    <>
+      <BoardView projectId={projectId!} />
+      <AIChatSidebar />
+    </>
+  );
 }

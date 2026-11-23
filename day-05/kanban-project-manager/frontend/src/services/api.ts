@@ -20,7 +20,7 @@ class ApiClient {
       ...init.headers,
     };
 
-    const response = await fetch(url, { ...init, headers });
+    const response = await fetch(url, { ...init, headers, credentials: "include" });
 
     if (!response.ok) {
       let errorBody: ApiError = { error: "Request failed" };

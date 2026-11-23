@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
-import { AIChatSidebar } from "@/components/ai/ai-chat-sidebar";
 
 export const metadata: Metadata = {
   title: "Product sprint | flowboard",
@@ -13,10 +12,7 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body>
-        {children}
-        <AIChatSidebar />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
