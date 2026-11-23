@@ -9,6 +9,7 @@ import projectRoutes from './routes/projects';
 import columnRoutes from './routes/columns';
 import cardRoutes from './routes/cards';
 import moveRoutes from './routes/move';
+import aiRoutes from './routes/ai';
 import { errorMiddleware, notFoundHandler } from './middleware/error';
 import { authMiddleware } from './middleware/auth';
 
@@ -38,6 +39,7 @@ export function createApp() {
   app.use('/api/projects/:id/columns', authMiddleware, columnRoutes);
   app.use('/api/projects/:id/columns/:columnId/cards', authMiddleware, cardRoutes);
   app.use('/api/projects/:id/cards', authMiddleware, moveRoutes);
+  app.use('/api/ai', authMiddleware, aiRoutes);
 
   const frontendOut = path.join(__dirname, 'frontend/out');
   const fallbackOut = path.join(__dirname, '../../frontend/out');

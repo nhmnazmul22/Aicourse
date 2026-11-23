@@ -8,9 +8,11 @@ export class ColumnService {
     projectId: string,
     name: string
   ): Promise<IBoardColumn> {
-    const lastColumn = await BoardColumn.findOne({
-      projectId: new Types.ObjectId(projectId),
-    }).sort({ position: -1 });
+    const lastColumn = await BoardColumn.findOne(
+      { projectId: new Types.ObjectId(projectId) },
+      null,
+      { sort: { position: -1 } }
+    );
     const position = lastColumn ? lastColumn.position + 1 : 0;
 
     return BoardColumn.create({

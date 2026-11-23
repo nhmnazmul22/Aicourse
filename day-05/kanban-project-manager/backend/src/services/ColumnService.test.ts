@@ -24,6 +24,8 @@ vi.mock("mongoose", async (importOriginal) => {
 vi.mock("../models/BoardColumn", () => ({
   BoardColumn: {
     find: vi.fn(),
+    findOne: vi.fn(),
+    create: vi.fn(),
     findOneAndUpdate: vi.fn(),
     deleteOne: vi.fn(),
   },
@@ -53,6 +55,28 @@ describe("ColumnService", () => {
       projectId: expect.anything(),
     });
     expect(result).toEqual(mockColumns);
+  });
+
+  it("createColumn creates and returns column with auto position", async () => {
+    const mockColumn = { _id: "c2", name: "New Column", position: 1 };
+    vi.spyOn(BoardColumn, "findOne").mockResolvedValue({
+      position: 0,
+    } as any);
+    vi.spyOn(BoardColumn, "create" as never).mockResolvedValue(mockColumn as any);
+
+    const result = await columnService.createColumn("user-123", "p1", "New Column");
+
+    expect(BoardColumn.findOne).toHaveBeenCalledWith(
+      { projectId: expect.anything() },
+      null,
+      { sort: { position: -1 } }
+    );
+    expect(BoardColumn.create).toHaveBeenCalledWith({
+      name: "New Column",
+      projectId: expect.anything(),
+      position: 1,
+    });
+    expect(result).toEqual(mockColumn);
   });
 
   it("updateColumn returns updated column", async () => {

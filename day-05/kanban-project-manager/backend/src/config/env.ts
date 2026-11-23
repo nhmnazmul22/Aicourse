@@ -7,6 +7,7 @@ export const env = {
   DB_URL: process.env.DB_URL || "",
   DB_NAME: process.env.DB_NAME || "project-manager",
   JWT_SECRET: process.env.JWT_SECRET || "change-me",
+  OPEN_ROUTER_KEY: process.env.OPEN_ROUTER_KEY || "",
   NODE_ENV: process.env.NODE_ENV || "development",
 };
 
