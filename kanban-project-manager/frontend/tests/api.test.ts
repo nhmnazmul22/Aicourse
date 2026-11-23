@@ -117,11 +117,11 @@ describe("api and services", () => {
     const mockStorage: Record<string, string> = {
       "auth-storage": JSON.stringify({ state: { token: "stored-jwt-token" } }),
     };
-    const prevWindow = (globalThis as any).window;
-    const prevStorage = (globalThis as any).localStorage;
+    const prevWindow = (globalThis as unknown as Record<string, unknown>).window;
+    const prevStorage = (globalThis as unknown as Record<string, unknown>).localStorage;
 
-    (globalThis as any).window = {};
-    (globalThis as any).localStorage = {
+    (globalThis as unknown as Record<string, unknown>).window = {};
+    (globalThis as unknown as Record<string, unknown>).localStorage = {
       getItem: (key: string) => mockStorage[key] || null,
       setItem: (key: string, val: string) => {
         mockStorage[key] = val;
@@ -149,8 +149,8 @@ describe("api and services", () => {
         })
       );
     } finally {
-      (globalThis as any).window = prevWindow;
-      (globalThis as any).localStorage = prevStorage;
+      (globalThis as unknown as Record<string, unknown>).window = prevWindow;
+      (globalThis as unknown as Record<string, unknown>).localStorage = prevStorage;
     }
   });
 });

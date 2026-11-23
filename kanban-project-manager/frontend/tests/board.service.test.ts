@@ -130,7 +130,9 @@ describe("boardService", () => {
 
   it("normalizes project with _id into id", async () => {
     const rawProject = { _id: "raw-proj-id", name: "Raw Project" };
-    vi.spyOn(api, "get").mockResolvedValue({ projects: [rawProject as any] });
+    vi.spyOn(api, "get").mockResolvedValue({
+      projects: [rawProject as unknown as import("../src/services/board.service").Project],
+    });
 
     const result = await boardService.listProjects();
 

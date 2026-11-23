@@ -56,7 +56,7 @@ describe("authService", () => {
       __v: 0,
     };
     vi.spyOn(api, "post").mockResolvedValue({
-      user: rawUser as any,
+      user: rawUser as unknown as import("../src/services/auth.service").User,
       token: "jwt-token-123",
     });
 

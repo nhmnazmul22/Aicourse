@@ -40,6 +40,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   loadBoard: async (projectId) => {
+    if (!projectId) return;
     set({ isLoading: true, error: null });
     try {
       const data = await boardService.getBoard(projectId);

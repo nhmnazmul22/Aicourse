@@ -399,7 +399,6 @@ export default function BoardView({ projectId }: { projectId: string }) {
   const isLoading = useBoardStore((state) => state.isLoading);
   const error = useBoardStore((state) => state.error);
   const setProject = useBoardStore((state) => state.setProject);
-  const loadProjects = useBoardStore((state) => state.loadProjects);
   const loadBoard = useBoardStore((state) => state.loadBoard);
   const createProject = useBoardStore((state) => state.createProject);
   const updateProject = useBoardStore((state) => state.updateProject);
@@ -424,10 +423,22 @@ export default function BoardView({ projectId }: { projectId: string }) {
     0,
   );
 
+  const lastLoadedBoardRef = useRef<string | null>(null);
+
   useEffect(() => {
+    if (!projectId) return;
+    const currentCols = useBoardStore.getState().columns;
+    const currentProj = useBoardStore.getState().project;
+    if (
+      lastLoadedBoardRef.current === projectId &&
+      currentProj?.id === projectId &&
+      currentCols.length > 0
+    ) {
+      return;
+    }
+    lastLoadedBoardRef.current = projectId;
     loadBoard(projectId);
-    loadProjects();
-  }, [projectId, loadBoard, loadProjects]);
+  }, [projectId, loadBoard]);
 
   async function handleLogout() {
     await authService.logout().catch(() => {});
@@ -527,8 +538,11 @@ export default function BoardView({ projectId }: { projectId: string }) {
               className="project-select"
               value={project?.id || ""}
               onChange={(e) => {
-                const selected = projects.find((p) => p.id === e.target.value);
+                const nextId = e.target.value;
+                if (!nextId || nextId === project?.id) return;
+                const selected = projects.find((p) => p.id === nextId);
                 if (selected) {
+                  lastLoadedBoardRef.current = selected.id;
                   setProject(selected);
                   loadBoard(selected.id);
                 }

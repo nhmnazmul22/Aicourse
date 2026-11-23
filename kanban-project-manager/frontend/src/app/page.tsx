@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef, useSyncExternalStore } from "react";
 import { useAuthStore } from "@/lib/auth-store";
 import { useBoardStore } from "@/lib/board-store";
 import { boardService } from "@/services/board.service";
@@ -8,31 +8,95 @@ import BoardView from "./board";
 import LoginPage from "./login/page";
 import { AIChatSidebar } from "@/components/ai/ai-chat-sidebar";
 
+function emptySubscribe() {
+  return () => {};
+}
+
+function useIsMounted(): boolean {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
+
+function getStoredToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const cookieToken = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      ?.split("=")[1];
+    if (cookieToken) return decodeURIComponent(cookieToken);
+
+    const stored = localStorage.getItem("auth-storage");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed?.state?.token) return parsed.state.token;
+    }
+  } catch {
+    // ignore parse error
+  }
+  return null;
+}
+
 export default function Home() {
+  const isMounted = useIsMounted();
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
   const isLoading = useAuthStore((state) => state.isLoading);
   const fetchMe = useAuthStore((state) => state.fetchMe);
   const logout = useAuthStore((state) => state.logout);
   const project = useBoardStore((state) => state.project);
+
+  const [authChecked, setAuthChecked] = useState(false);
   const [projectLoaded, setProjectLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  const initialLoadedUserRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!user) {
-      fetchMe().catch(() => {});
+    let active = true;
+    const existingToken = token || getStoredToken();
+    if (!existingToken && !user) {
+      Promise.resolve().then(() => {
+        if (active) setAuthChecked(true);
+      });
+      return () => {
+        active = false;
+      };
     }
-  }, [user, fetchMe]);
+    if (!user) {
+      fetchMe()
+        .catch(() => {})
+        .finally(() => {
+          if (active) setAuthChecked(true);
+        });
+    } else {
+      Promise.resolve().then(() => {
+        if (active) setAuthChecked(true);
+      });
+    }
+    return () => {
+      active = false;
+    };
+  }, [user, token, fetchMe]);
 
   const loadInitialData = useCallback(async () => {
     setLoadError(null);
     try {
       const projects = await boardService.listProjects();
       useBoardStore.setState({ projects });
+
       if (projects.length > 0) {
-        const first = projects[0];
-        const projId = first.id || (first as unknown as { _id?: string })._id;
-        useBoardStore.getState().setProject(first);
+        const currentSelected = useBoardStore.getState().project;
+        const matching = currentSelected
+          ? projects.find((p) => p.id === currentSelected.id)
+          : null;
+        const targetProject = matching || projects[0];
+        const projId = targetProject.id || (targetProject as unknown as { _id?: string })._id;
+
+        useBoardStore.getState().setProject(targetProject);
         if (projId) {
           await useBoardStore.getState().loadBoard(projId);
           const boardError = useBoardStore.getState().error;
@@ -62,12 +126,21 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      initialLoadedUserRef.current = null;
+      return;
+    }
+    if (initialLoadedUserRef.current === user.id) return;
+    initialLoadedUserRef.current = user.id;
     loadInitialData();
   }, [user, loadInitialData]);
 
-  // Only show spinner when actively authenticating (token exists but user not yet resolved)
-  if (token && isLoading && !user) {
+  // Initial render (SSR and before client auth verification completes):
+  // Renders the spinner on both server and client initially.
+  // This guarantees:
+  // 1. Zero hydration mismatch between server and client.
+  // 2. On hard reload for an authenticated user, they never see a flash of the login page.
+  if (!isMounted || !authChecked || (!user && (token || isLoading))) {
     return (
       <div className="auth-page">
         <div className="auth-card">
@@ -77,12 +150,12 @@ export default function Home() {
     );
   }
 
-  // Not authenticated — show login immediately, no spinner
+  // Auth check complete and user is not authenticated: show login page
   if (!user) {
     return <LoginPage />;
   }
 
-  // Still loading project data
+  // Authenticated, loading project data
   if (!projectLoaded) {
     return (
       <div className="auth-page">
@@ -93,7 +166,7 @@ export default function Home() {
     );
   }
 
-  // Finished loading but no project could be loaded or resolved
+  // Authenticated and loaded, but no project found
   if (!project) {
     return (
       <div className="auth-page">
@@ -151,7 +224,10 @@ export default function Home() {
                 cursor: "pointer",
                 fontWeight: 500,
               }}
-              onClick={() => logout()}
+              onClick={() => {
+                initialLoadedUserRef.current = null;
+                logout();
+              }}
             >
               Sign out
             </button>
