@@ -1,0 +1,4 @@
+3 ways to give extra abilities to ai:
+ - MCP : connect someone else tools
+ - Skills : add expertise and capabilities
+ - Plugin : Bundle of MCP, skills and more.
